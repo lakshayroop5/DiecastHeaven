@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production
+.next/
+out/
+.vercel/
+
+# Database
+*.db
+*.sqlite
+
+# Environment
+.env
+.env.*.local
+
+# Debug
+*.log*
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
