@@ -1,9 +1,14 @@
 import { PrismaClient } from '@prisma/client'
-import { PrismaLibSQL } from '@prisma/adapter-libsql'
-import { createClient } from '@libsql/client/http'
 
-function createPrismaClient() {
-  if (process.env.DATABASE_URL?.startsWith('libsql://')) {
+// Factory for Prisma client with Turso/libsql support
+function createPrismaClient(): PrismaClient {
+  const isTurso = process.env.DATABASE_URL?.startsWith('libsql://')
+  
+  if (isTurso) {
+    // Dynamic import for Turso dependencies (only needed in edge/serverless)
+    const { PrismaLibSQL } = require('@prisma/adapter-libsql')
+    const { createClient } = require('@libsql/client/http')
+    
     const client = createClient({
       url: process.env.DATABASE_URL,
       authToken: process.env.DATABASE_AUTH_TOKEN,
@@ -16,11 +21,12 @@ function createPrismaClient() {
   return new PrismaClient()
 }
 
+// Singleton pattern for Prisma client
 declare global {
   var prisma: PrismaClient | undefined
 }
 
-const prisma = global.prisma || createPrismaClient()
+const prisma = global.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') {
   global.prisma = prisma

@@ -15,8 +15,8 @@ model Category {
   slug        String    @unique
   description String?
   products    Product[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@map("categories")
 }
@@ -26,40 +26,40 @@ model Product {
   title       String
   slug        String   @unique
   description String?
-  shortDesc   String?
-  priceText   String?
+  shortDesc   String?  @map("short_desc")
+  priceText   String?  @map("price_text")
   status      String   @default("DRAFT")
   featured    Boolean  @default(false)
-  categoryId  String
+  categoryId  String   @map("category_id")
   category    Category @relation(fields: [categoryId], references: [id])
   images      ProductImage[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("products")
 }
 
 model ProductImage {
   id        String   @id @default(cuid())
-  productId String
+  productId String   @map("product_id")
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  imageUrl  String
-  altText   String?
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
+  imageUrl  String   @map("image_url")
+  altText   String?  @map("alt_text")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@map("product_images")
 }
 
 model SiteSetting {
   id                     String   @id @default(cuid())
-  businessName           String
-  whatsappNumber         String
-  whatsappDefaultMessage String
-  heroTitle              String?
-  heroSubtitle           String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  businessName           String   @map("business_name")
+  whatsappNumber         String   @map("whatsapp_number")
+  whatsappDefaultMessage String   @map("whatsapp_default_message")
+  heroTitle              String?  @map("hero_title")
+  heroSubtitle           String?  @map("hero_subtitle")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
 
   @@map("site_settings")
 }

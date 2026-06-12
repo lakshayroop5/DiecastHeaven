@@ -2,13 +2,13 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Product } from '@prisma/client'
+import type { Product } from '@prisma/client'
 import WhatsAppCTA from './whatsapp-cta'
 
 interface ProductWithImages extends Product {
-   images: { imageUrl: string; altText: string | null }[]
-   category: { name: string; slug: string } | null
- }
+  images: Array<{ imageUrl: string; altText: string | null }>
+  category: { name: string; slug: string } | null
+}
 
 interface ProductCardProps {
   product: ProductWithImages
@@ -18,9 +18,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   const mainImage = product.images[0]
 
   return (
-    <div className="group relative bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black hover:border-hotwheels-red/50 transition-colors">
+    <article className="group relative bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black hover:border-hotwheels-red/50 transition-colors">
       <Link href={`/product/${product.slug}`}>
-        <div className="aspect-square relative bg-hotwheels-black overflow-hidden">
+        <figure className="aspect-square relative bg-hotwheels-black overflow-hidden">
           {mainImage ? (
             <Image
               src={mainImage.imageUrl}
@@ -34,7 +34,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               <span className="text-gray-500">No image</span>
             </div>
           )}
-        </div>
+        </figure>
       </Link>
       
       <div className="p-4">
@@ -44,9 +44,9 @@ export default function ProductCard({ product }: ProductCardProps) {
           </h3>
         </Link>
         
-<p className="mt-1 text-sm text-gray-400">
-           {product.category?.name}
-         </p>
+        <p className="mt-1 text-sm text-gray-400">
+          {product.category?.name}
+        </p>
         
         {product.priceText && (
           <p className="mt-2 text-hotwheels-yellow font-medium">
@@ -67,6 +67,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         </div>
       </div>
-    </div>
+    </article>
   )
 }

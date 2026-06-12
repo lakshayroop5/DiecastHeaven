@@ -1,5 +1,11 @@
 import Link from 'next/link'
 
+const QUICK_LINKS = [
+  { href: '/', label: 'Home' },
+  { href: '/catalog', label: 'Catalog' },
+  { href: '/about', label: 'About' },
+] as const
+
 export default function Footer() {
   return (
     <footer className="bg-hotwheels-gray border-t border-hotwheels-black">
@@ -19,21 +25,16 @@ export default function Footer() {
           <div>
             <h3 className="text-sm font-semibold text-hotwheels-yellow">Quick Links</h3>
             <ul className="mt-4 space-y-2">
-              <li>
-                <Link href="/" className="text-sm text-gray-300 hover:text-hotwheels-white transition-colors">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link href="/catalog" className="text-sm text-gray-300 hover:text-hotwheels-white transition-colors">
-                  Catalog
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-sm text-gray-300 hover:text-hotwheels-white transition-colors">
-                  About
-                </Link>
-              </li>
+              {QUICK_LINKS.map(({ href, label }) => (
+                <li key={href}>
+                  <Link 
+                    href={href} 
+                    className="text-sm text-gray-300 hover:text-hotwheels-white transition-colors"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
           

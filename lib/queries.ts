@@ -1,138 +1,134 @@
 import prisma from './prisma'
-import type { Product, Category, ProductImage } from '@prisma/client'
+import type { ProductWithRelations } from './types'
 
-export type ProductWithCategory = Product & {
-   category: Category | null
-   images: ProductImage[]
-}
-
-// Site settings
-export async function getSiteSettings() {
-  try {
-    return await prisma.siteSetting.findFirst()
-  } catch (error) {
-    console.error('Error fetching site settings:', error)
-    return null
+// Repository class implementing repository pattern for data access
+class ProductRepository {
+  static readonly DEFAULT_INCLUDE = {
+    category: true,
+    images: { orderBy: { sortOrder: 'asc' as const } },
   }
-}
 
-// Categories
-export async function getCategories() {
-  try {
-    return await prisma.category.findMany({
-      orderBy: { name: 'asc' },
+  private static handleQuery<T>(query: Promise<T>, errorMessage: string): Promise<T> {
+    return query.catch((error) => {
+      console.error(errorMessage, error)
+      throw error
     })
-  } catch (error) {
-    console.error('Error fetching categories:', error)
-    return []
+  }
+
+  static async getSiteSettings() {
+    return this.handleQuery(
+      prisma.siteSetting.findFirst(),
+      'Error fetching site settings:'
+    )
+  }
+
+  static async getCategories() {
+    return this.handleQuery(
+      prisma.category.findMany({ orderBy: { name: 'asc' } }),
+      'Error fetching categories:'
+    )
+  }
+
+  static async getFeaturedProducts(limit = 6): Promise<ProductWithRelations[]> {
+    return this.handleQuery(
+      prisma.product.findMany({
+        where: { status: 'PUBLISHED', featured: true },
+        include: this.DEFAULT_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }) as Promise<ProductWithRelations[]>,
+      'Error fetching featured products:'
+    )
+  }
+
+  static async getPublishedProducts(): Promise<ProductWithRelations[]> {
+    return this.handleQuery(
+      prisma.product.findMany({
+        where: { status: 'PUBLISHED' },
+        include: this.DEFAULT_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+      }) as Promise<ProductWithRelations[]>,
+      'Error fetching published products:'
+    )
+  }
+
+  static async getPublishedProductsByCategory(categoryId: string): Promise<ProductWithRelations[]> {
+    return this.handleQuery(
+      prisma.product.findMany({
+        where: { status: 'PUBLISHED', categoryId },
+        include: this.DEFAULT_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+      }) as Promise<ProductWithRelations[]>,
+      'Error fetching products by category:'
+    )
+  }
+
+  static async getProductBySlug(slug: string): Promise<ProductWithRelations | null> {
+    return this.handleQuery(
+      prisma.product.findUnique({
+        where: { slug },
+        include: this.DEFAULT_INCLUDE,
+      }) as Promise<ProductWithRelations | null>,
+      'Error fetching product by slug:'
+    )
+  }
+
+  static async searchProducts(query: string): Promise<ProductWithRelations[]> {
+    return this.handleQuery(
+      prisma.product.findMany({
+        where: {
+          status: 'PUBLISHED',
+          OR: [
+            { title: { contains: query } },
+            { description: { contains: query } },
+            { shortDesc: { contains: query } },
+          ],
+        },
+        include: {
+          ...this.DEFAULT_INCLUDE,
+          images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+        },
+        orderBy: { createdAt: 'desc' },
+      }) as Promise<ProductWithRelations[]>,
+      'Error searching products:'
+    )
+  }
+
+  static async getRelatedProducts(
+    categoryId: string,
+    excludeProductId: string,
+    limit = 4
+  ): Promise<ProductWithRelations[]> {
+    return this.handleQuery(
+      prisma.product.findMany({
+        where: {
+          status: 'PUBLISHED',
+          categoryId,
+          id: { not: excludeProductId },
+        },
+        include: {
+          ...this.DEFAULT_INCLUDE,
+          images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }) as Promise<ProductWithRelations[]>,
+      'Error fetching related products:'
+    )
   }
 }
 
-// Products
-export async function getFeaturedProducts(limit = 6) {
-  try {
-    return await prisma.product.findMany({
-      where: { status: 'PUBLISHED', featured: true },
-      include: {
-        category: true,
-        images: { orderBy: { sortOrder: 'asc' } },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-    })
-  } catch (error) {
-    console.error('Error fetching featured products:', error)
-    return []
-  }
-}
+// Export individual functions for backward compatibility
+export const getSiteSettings = () => ProductRepository.getSiteSettings()
+export const getCategories = () => ProductRepository.getCategories()
+export const getFeaturedProducts = (limit?: number) => 
+  ProductRepository.getFeaturedProducts(limit)
+export const getPublishedProducts = () => ProductRepository.getPublishedProducts()
+export const getPublishedProductsByCategory = (categoryId: string) => 
+  ProductRepository.getPublishedProductsByCategory(categoryId)
+export const getProductBySlug = (slug: string) => ProductRepository.getProductBySlug(slug)
+export const searchProducts = (query: string) => ProductRepository.searchProducts(query)
+export const getRelatedProducts = (categoryId: string, excludeProductId: string, limit?: number) => 
+  ProductRepository.getRelatedProducts(categoryId, excludeProductId, limit)
 
-export async function getPublishedProducts(): Promise<ProductWithCategory[]> {
-   try {
-     return await prisma.product.findMany({
-       where: { status: 'PUBLISHED' },
-       include: {
-         category: true,
-         images: { orderBy: { sortOrder: 'asc' } },
-       },
-       orderBy: { createdAt: 'desc' },
-     }) as ProductWithCategory[]
-   } catch (error) {
-     console.error('Error fetching published products:', error)
-     return []
-   }
- }
-
-export async function getPublishedProductsByCategory(categoryId: string) {
-  try {
-    return await prisma.product.findMany({
-      where: { status: 'PUBLISHED', categoryId },
-      include: {
-        category: true,
-        images: { orderBy: { sortOrder: 'asc' } },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
-  } catch (error) {
-    console.error('Error fetching products by category:', error)
-    return []
-  }
-}
-
-export async function getProductBySlug(slug: string) {
-  try {
-    return await prisma.product.findUnique({
-      where: { slug },
-      include: {
-        category: true,
-        images: { orderBy: { sortOrder: 'asc' } },
-      },
-    })
-  } catch (error) {
-    console.error('Error fetching product by slug:', error)
-    return null
-  }
-}
-
-export async function searchProducts(query: string): Promise<ProductWithCategory[]> {
-   try {
-     return await prisma.product.findMany({
-       where: {
-         status: 'PUBLISHED',
-         OR: [
-           { title: { contains: query } },
-           { description: { contains: query } },
-           { shortDesc: { contains: query } },
-         ],
-       },
-       include: {
-         category: true,
-         images: { orderBy: { sortOrder: 'asc' }, take: 1 },
-       },
-       orderBy: { createdAt: 'desc' },
-     }) as ProductWithCategory[]
-   } catch (error) {
-     console.error('Error searching products:', error)
-     return []
-   }
- }
-
-export async function getRelatedProducts(categoryId: string, excludeProductId: string, limit = 4) {
-  try {
-    return await prisma.product.findMany({
-      where: {
-        status: 'PUBLISHED',
-        categoryId,
-        id: { not: excludeProductId },
-      },
-      include: {
-        category: true,
-        images: { orderBy: { sortOrder: 'asc' }, take: 1 },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-    })
-  } catch (error) {
-    console.error('Error fetching related products:', error)
-    return []
-  }
-}
+export type { ProductWithRelations } from './types'
