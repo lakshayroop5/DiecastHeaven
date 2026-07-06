@@ -25,7 +25,7 @@ export default function Hero({
   backgroundImage = '/hero-banner.png',
 }: HeroProps) {
   return (
-    <div className="relative w-full min-h-[90vh] flex flex-col">
+    <div className="relative w-full min-h-[70vh] sm:min-h-[90vh] flex flex-col">
       {/* Background Image */}
       <div className="absolute inset-0 -z-10">
         <Image
@@ -69,11 +69,11 @@ export default function Hero({
       {/* Bottom Ticker Bar - Pill buttons */}
       <div className="relative z-10 pb-6">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="flex flex-wrap items-center justify-start gap-3">
+          <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {TICKER_ITEMS.map((item, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3"
+                className="flex items-center gap-3 flex-shrink-0"
               >
                 <div className="bg-black/50 backdrop-blur-sm border border-white/10 rounded-full px-5 py-2.5">
                   <span className="text-sm font-medium text-white whitespace-nowrap">{item}</span>

@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, Search, ChevronDown, User, ShoppingBag } from 'lucide-react'
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, useRef, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useCart } from '@/lib/cart-context'
+import { buildWhatsAppLink } from '@/lib/whatsapp'
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -22,19 +23,29 @@ const navigation = [
   { name: 'Brands', href: '/catalog?view=brands' },
   { name: 'New Arrivals', href: '/catalog?sort=newest' },
   { name: 'Collectibles', href: '/catalog?category=sets' },
-  { name: 'Contact', href: 'https://wa.me/919876543210' },
+  { name: 'Contact', href: '#contact' },
 ]
 
 interface HeaderProps {
   businessName?: string
+  whatsappNumber?: string
 }
 
-export default function Header({ businessName = 'Diecast Heaven' }: HeaderProps) {
+export default function Header({ businessName = process.env.DEFAULT_BUSINESS_NAME || '', whatsappNumber = '' }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const [wantSearch, setWantSearch] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const { totalItems } = useCart()
+
+  useEffect(() => {
+    if (wantSearch && mobileMenuOpen && searchInputRef.current) {
+      searchInputRef.current.focus()
+      setWantSearch(false)
+    }
+  }, [wantSearch, mobileMenuOpen])
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault()
@@ -47,6 +58,7 @@ export default function Header({ businessName = 'Diecast Heaven' }: HeaderProps)
   }
 
   return (
+    <>
     <header className="bg-hotwheels-black/90 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8">
         {/* Logo */}
@@ -65,7 +77,11 @@ export default function Header({ businessName = 'Diecast Heaven' }: HeaderProps)
 
         {/* Desktop Nav */}
         <div className="hidden lg:flex lg:items-center lg:gap-x-8">
-          {navigation.map((item) => (
+          {navigation.map((item) => {
+            const href = item.name === 'Contact' && whatsappNumber
+              ? buildWhatsAppLink(whatsappNumber)
+              : item.href
+            return (
             <div
               key={item.name}
               className="relative"
@@ -73,7 +89,7 @@ export default function Header({ businessName = 'Diecast Heaven' }: HeaderProps)
               onMouseLeave={() => setOpenDropdown(null)}
             >
               <Link
-                href={item.href}
+                href={href}
                 className={cn(
                   'text-sm font-medium transition-colors inline-flex items-center gap-1',
                   item.name === 'Home'
@@ -98,7 +114,7 @@ export default function Header({ businessName = 'Diecast Heaven' }: HeaderProps)
                 </div>
               )}
             </div>
-          ))}
+          )})}
         </div>
 
         {/* Desktop Right Actions */}
@@ -131,17 +147,29 @@ export default function Header({ businessName = 'Diecast Heaven' }: HeaderProps)
         </div>
 
         {/* Mobile */}
-        <div className="flex lg:hidden items-center gap-2">
+        <div className="flex lg:hidden items-center gap-1">
           <button
             type="button"
             className="p-2 text-white"
             onClick={() => {
-              const el = document.getElementById('mobile-search-input')
-              el?.focus()
+              setWantSearch(true)
+              setMobileMenuOpen(true)
             }}
           >
             <Search className="h-5 w-5" />
           </button>
+          <Link
+            href="/cart"
+            className="relative p-2 text-white"
+            aria-label={`Cart with ${totalItems} items`}
+          >
+            <ShoppingBag className="h-5 w-5" />
+            {totalItems > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-[#D4A843] text-black text-[10px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
+                {totalItems}
+              </span>
+            )}
+          </Link>
           <button
             type="button"
             className="p-2 text-white"
@@ -151,72 +179,78 @@ export default function Header({ businessName = 'Diecast Heaven' }: HeaderProps)
           </button>
         </div>
       </nav>
-
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden">
-          <div className="fixed inset-0 z-50 bg-black/60" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-sm overflow-y-auto bg-hotwheels-gray px-6 py-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <Link href="/" onClick={() => setMobileMenuOpen(false)}>
-                <Image
-                  src="/diecast-heaven-logo.png"
-                  alt="Diecast Heaven Udaipur"
-                  width={100}
-                  height={100}
-                  className="h-12 w-auto object-contain"
-                />
-              </Link>
-              <button
-                type="button"
-                className="p-2 text-white"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSearch} className="mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  id="mobile-search-input"
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search cars, brands..."
-                  className="w-full rounded-lg bg-hotwheels-black border border-white/10 pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#D4A843]/50"
-                />
-              </div>
-            </form>
-
-            <div className="space-y-1">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="block rounded-lg px-3 py-2.5 text-base font-semibold text-white hover:bg-hotwheels-black transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
-              <Link
-                href="/cart"
-                className="flex items-center justify-between rounded-lg px-3 py-2.5 text-base font-semibold text-[#D4A843] hover:bg-hotwheels-black transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <span>Cart</span>
-                {totalItems > 0 && (
-                  <span className="bg-[#D4A843] text-black text-xs font-bold px-2 py-0.5 rounded-full">
-                    {totalItems}
-                  </span>
-                )}
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
     </header>
+
+    {/* Mobile Menu - rendered outside header to avoid stacking context issues */}
+    {mobileMenuOpen && (
+      <div
+        className="fixed inset-0 z-[60] flex flex-col bg-hotwheels-gray px-6 py-6"
+        style={{ animation: 'fade-in 0.2s ease-out' }}
+      >
+        <div className="flex items-center justify-between mb-8">
+          <Link href="/" onClick={() => setMobileMenuOpen(false)}>
+            <Image
+              src="/diecast-heaven-logo.png"
+              alt="Diecast Heaven Udaipur"
+              width={100}
+              height={100}
+              className="h-12 w-auto object-contain"
+            />
+          </Link>
+          <button
+            type="button"
+            className="p-2 text-white"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSearch} className="mb-8">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search cars, brands..."
+              className="w-full rounded-lg bg-hotwheels-black border border-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#D4A843]/50"
+            />
+          </div>
+        </form>
+
+        <nav className="flex-1 flex flex-col justify-center gap-2 max-w-md mx-auto w-full">
+          {navigation.map((item) => {
+            const href = item.name === 'Contact' && whatsappNumber
+              ? buildWhatsAppLink(whatsappNumber)
+              : item.href
+            return (
+            <Link
+              key={item.name}
+              href={href}
+              className="block rounded-lg px-4 py-4 text-center text-lg font-semibold text-white hover:bg-hotwheels-black transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {item.name}
+            </Link>
+          )})}
+          <Link
+            href="/cart"
+            className="flex items-center justify-center gap-2 rounded-lg px-4 py-4 text-center text-lg font-semibold text-[#D4A843] hover:bg-hotwheels-black transition-colors"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <ShoppingBag className="h-5 w-5" />
+            <span>Cart</span>
+            {totalItems > 0 && (
+              <span className="bg-[#D4A843] text-black text-xs font-bold px-2 py-0.5 rounded-full">
+                {totalItems}
+              </span>
+            )}
+          </Link>
+        </nav>
+      </div>
+    )}
+    </>
   )
 }

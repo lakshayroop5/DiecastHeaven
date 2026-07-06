@@ -1,12 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
-import { useState } from 'react'
 import type { Product } from '@prisma/client'
 import WhatsAppCTA from './whatsapp-cta'
+import AddToCartButton from './add-to-cart-button'
 import { formatPrice } from '@/lib/utils'
-import { useCart } from '@/lib/cart-context'
 
 interface ProductWithImages extends Product {
   brand: { name: string; slug: string } | null
@@ -21,33 +19,16 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const mainImage = product.images[0]
   const hasDiscount = product.offerPrice != null && product.price != null && product.offerPrice < product.price
-  const { addItem, totalItems } = useCart()
-  const [justAdded, setJustAdded] = useState(false)
-
-  const handleAddToCart = () => {
-    addItem({
-      id: product.id,
-      slug: product.slug,
-      title: product.title,
-      price: product.price,
-      offerPrice: product.offerPrice,
-      image: mainImage?.imageUrl || '',
-    })
-    setJustAdded(true)
-    setTimeout(() => setJustAdded(false), 1200)
-  }
 
   return (
     <article className="group relative bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black hover:border-hotwheels-red/50 transition-colors">
       <Link href={`/product/${product.slug}`}>
         <figure className="aspect-square relative bg-hotwheels-black overflow-hidden">
           {mainImage ? (
-            <Image
+            <img
               src={mainImage.imageUrl}
               alt={mainImage.altText || product.title}
-              fill
-              className="object-cover transition-transform group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
             />
           ) : (
             <div className="w-full h-full bg-hotwheels-black flex items-center justify-center">
@@ -125,17 +106,8 @@ export default function ProductCard({ product }: ProductCardProps) {
           </p>
         )}
 
-        <div className="mt-4 flex items-center gap-2">
-          <button
-            onClick={handleAddToCart}
-            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
-              justAdded
-                ? 'bg-green-600 text-white'
-                : 'bg-hotwheels-red text-white hover:bg-red-700'
-            }`}
-          >
-            {justAdded ? 'Added!' : 'Add to Cart'}
-          </button>
+        <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <AddToCartButton product={{ id: product.id, slug: product.slug, title: product.title, price: product.price, offerPrice: product.offerPrice }} imageUrl={mainImage?.imageUrl} variant="compact" />
           <WhatsAppCTA productName={product.title} variant="small" />
         </div>
       </div>
