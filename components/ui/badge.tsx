@@ -2,8 +2,6 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = {
-  default: "border-transparent bg-hotwheels-red text-white hover:bg-hotwheels-red/80",
-  secondary: "border-transparent bg-hotwheels-gray text-hotwheels-white hover:bg-hotwheels-black",
   destructive: "border-transparent bg-red-500 text-white hover:bg-red-500/80",
   outline: "text-hotwheels-yellow border-hotwheels-yellow",
 } as const
@@ -14,7 +12,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: BadgeVariant
 }
 
-function Badge({ className, variant = "default", ...props }: BadgeProps) {
+function Badge({ className, variant = "outline", ...props }: BadgeProps) {
   return (
     <div
       className={cn(

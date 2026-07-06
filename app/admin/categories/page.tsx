@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma'
+import { toSlug } from '@/lib/slug'
 import InlineForm from '../inline-form'
 import DeleteButton from '../delete-button'
 
@@ -7,8 +8,7 @@ export const dynamic = 'force-dynamic'
 export default function AdminCategories() {
   const addCategory = async (name: string) => {
     'use server'
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-    await prisma.category.create({ data: { name, slug } })
+    await prisma.category.create({ data: { name, slug: toSlug(name) } })
   }
 
   return (

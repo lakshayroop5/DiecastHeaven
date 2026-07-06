@@ -1,14 +1,15 @@
-import { getPublishedProducts, getCategories, getBrands } from '@/lib/queries'
+import prisma from '@/lib/prisma'
+import { getCategories, getBrands } from '@/lib/queries'
 
 export default async function AdminDashboard() {
-  const [products, categories, brands] = await Promise.all([
-    getPublishedProducts(),
+  const [productCount, categories, brands] = await Promise.all([
+    prisma.product.count({ where: { status: 'PUBLISHED' } }),
     getCategories(),
     getBrands(),
   ])
 
   const stats = [
-    { label: 'Products', value: products.length, href: '/admin/products' },
+    { label: 'Products', value: productCount, href: '/admin/products' },
     { label: 'Categories', value: categories.length, href: '/admin/categories' },
     { label: 'Brands', value: brands.length, href: '/admin/brands' },
   ]

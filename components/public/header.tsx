@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, X, Search, ChevronDown, User, ShoppingBag } from 'lucide-react'
+import { Menu, X, Search, ChevronDown, ShoppingBag } from 'lucide-react'
 import { useState, useEffect, useRef, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -21,17 +21,16 @@ const navigation = [
     ],
   },
   { name: 'Brands', href: '/catalog?view=brands' },
-  { name: 'New Arrivals', href: '/catalog?sort=newest' },
+  { name: 'New Arrivals', href: '/catalog' },
   { name: 'Collectibles', href: '/catalog?category=sets' },
   { name: 'Contact', href: '#contact' },
 ]
 
 interface HeaderProps {
-  businessName?: string
   whatsappNumber?: string
 }
 
-export default function Header({ businessName = process.env.DEFAULT_BUSINESS_NAME || '', whatsappNumber = '' }: HeaderProps) {
+export default function Header({ whatsappNumber = '' }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
@@ -129,9 +128,6 @@ export default function Header({ businessName = process.env.DEFAULT_BUSINESS_NAM
               className="w-52 rounded-full bg-white/10 border border-white/10 pl-10 pr-4 py-1.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#D4A843]/50 focus:ring-1 focus:ring-[#D4A843]/30 transition-all"
             />
           </form>
-          <button className="p-2 text-gray-400 hover:text-white transition-colors">
-            <User className="h-5 w-5" />
-          </button>
           <Link
             href="/cart"
             className="relative p-2 text-gray-400 hover:text-white transition-colors"

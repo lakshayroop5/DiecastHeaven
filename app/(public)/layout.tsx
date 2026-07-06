@@ -19,7 +19,7 @@ export default async function PublicLayout({
   const settings = await getSiteSettings()
   return (
     <>
-      <Header businessName={settings?.businessName} whatsappNumber={settings?.whatsappNumber} />
+      <Header whatsappNumber={settings?.whatsappNumber} />
       <main className="flex-1">{children}</main>
       <Footer />
     </>

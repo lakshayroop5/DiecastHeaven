@@ -7,7 +7,6 @@ interface HeroProps {
   subtitle: string
   ctaText?: string
   ctaLink?: string
-  backgroundImage?: string
 }
 
 const TICKER_ITEMS = [
@@ -22,18 +21,17 @@ export default function Hero({
   subtitle,
   ctaText = 'Shop Collection',
   ctaLink = '/catalog',
-  backgroundImage = '/hero-banner.jpeg',
 }: HeroProps) {
   return (
-    <div className="relative w-full min-h-[60vh] sm:min-h-[70vh] lg:min-h-[90vh] flex flex-col">
-      {/* Background Image */}
-      <div className="absolute inset-0 -z-10">
+    <div className="relative w-full min-h-[50vh] sm:min-h-[70vh] lg:min-h-[90vh] flex flex-col">
+      {/* Background Image — full image visible, no cropping */}
+      <div className="absolute inset-0 -z-10 bg-black">
         <Image
-          src={backgroundImage}
+          src="/hero-banner.jpeg"
           alt="Diecast car showcase"
           fill
           sizes="100vw"
-          className="object-[center_30%] sm:object-center"
+          className="object-contain"
           priority
         />
         {/* Gradient overlay for text readability */}

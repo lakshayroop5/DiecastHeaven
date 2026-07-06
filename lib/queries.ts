@@ -1,7 +1,5 @@
 import prisma from './prisma'
 import type { ProductWithRelations } from './types'
-
-// ponytail: catch DB errors at build time (libsql migration check returns 400 on Turso during prerender)
 async function safeQuery<T>(query: Promise<T>, fallback: T): Promise<T> {
   try {
     return await query
@@ -128,5 +126,3 @@ export function getRelatedProducts(
     []
   )
 }
-
-export type { ProductWithRelations } from './types'

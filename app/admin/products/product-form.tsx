@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { toSlug } from '@/lib/slug'
 import Field from '../field'
 
 interface Brand { id: string; name: string }
 interface Category { id: string; name: string }
-interface ProductImage { imageUrl: string; altText: string | null; id?: string; data?: string }
+interface ProductImage { imageUrl: string; altText: string | null; id?: string }
 
 interface Props {
   product?: {
@@ -83,7 +84,7 @@ export default function ProductForm({ product }: Props) {
 
     const body = {
       title: form.title,
-      slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      slug: form.slug || toSlug(form.title),
       description: form.description || null,
       shortDesc: form.shortDesc || null,
       scale: form.scale || null,
