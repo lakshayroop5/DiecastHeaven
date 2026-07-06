@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Product } from '@prisma/client'
 import WhatsAppCTA from './whatsapp-cta'
 import AddToCartButton from './add-to-cart-button'
@@ -25,10 +26,12 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link href={`/product/${product.slug}`}>
         <figure className="aspect-square relative bg-hotwheels-black overflow-hidden">
           {mainImage ? (
-            <img
+            <Image
               src={mainImage.imageUrl}
               alt={mainImage.altText || product.title}
-              className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover transition-transform group-hover:scale-105"
             />
           ) : (
             <div className="w-full h-full bg-hotwheels-black flex items-center justify-center">

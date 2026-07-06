@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getProductBySlug, getRelatedProducts } from '@/lib/queries'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
 import AddToCartButton from '@/components/public/add-to-cart-button'
@@ -185,10 +186,13 @@ function ProductImageGallery({
     <div className="flex flex-col">
       <div className="aspect-square relative bg-hotwheels-gray rounded-lg overflow-hidden mb-4">
         {mainImage ? (
-          <img
+          <Image
             src={mainImage.imageUrl}
             alt={mainImage.altText || title}
-            className="absolute inset-0 w-full h-full object-cover"
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-cover"
+            priority
           />
         ) : (
           <div className="w-full h-full bg-hotwheels-black flex items-center justify-center">
@@ -204,10 +208,12 @@ function ProductImageGallery({
               key={image.imageUrl}
               className="aspect-square relative bg-hotwheels-gray rounded overflow-hidden cursor-pointer hover:opacity-80"
             >
-              <img
+              <Image
                 src={image.imageUrl}
                 alt={image.altText || `${title} view ${index + 1}`}
-                className="absolute inset-0 w-full h-full object-cover"
+                fill
+                sizes="100px"
+                className="object-cover"
               />
             </div>
           ))}

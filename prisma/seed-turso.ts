@@ -178,7 +178,7 @@ async function seedData() {
   }
 
   // Site settings
-  stmts.push(`INSERT INTO site_settings (id, business_name, whatsapp_number, whatsapp_default_message, hero_title, hero_subtitle) VALUES ('${cuid()}', 'Diecast Heaven', '919876543210', 'Hi, I am interested in {product}. Please share more details.', 'India''s Premium Diecast Destination', 'Hot Wheels \u00b7 Majorette \u00b7 Matchbox \u00b7 Bburago \u00b7 Tomica \u00b7 Tarmac Works \u00b7 Pop Race')`)
+  stmts.push(`INSERT INTO site_settings (id, business_name, whatsapp_number, whatsapp_default_message, hero_title, hero_subtitle) VALUES ('${cuid()}', 'Diecast Heaven', '919079674984', 'Hi, I am interested in {product}. Please share more details.', 'India''s Premium Diecast Destination', 'Hot Wheels \u00b7 Majorette \u00b7 Matchbox \u00b7 Bburago \u00b7 Tomica \u00b7 Tarmac Works \u00b7 Pop Race')`)
 
   await client.executeMultiple(stmts.join(';\n') + ';')
   console.log('Turso seed complete!')
