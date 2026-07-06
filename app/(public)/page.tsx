@@ -9,7 +9,7 @@ import {
   getSiteSettings,
 } from '@/lib/queries'
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const [featuredProducts, categories, brands, settings] = await Promise.all([
@@ -23,9 +23,10 @@ export default async function HomePage() {
     <>
       {/* Hero */}
       <Hero
-        title={settings?.heroTitle || "India's Premium Diecast Destination"}
+        title={settings?.heroTitle || process.env.DEFAULT_HERO_TITLE || "India's Premium Diecast Destination"}
         subtitle={
           settings?.heroSubtitle ||
+          process.env.DEFAULT_HERO_SUBTITLE ||
           'Hot Wheels \u00b7 Majorette \u00b7 Matchbox \u00b7 Bburago \u00b7 Tomica'
         }
       />

@@ -1,18 +1,24 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import { formatPrice } from '@/lib/utils'
 import { buildWhatsAppLink } from '@/lib/whatsapp'
 
-const WHATSAPP_NUMBER = '919876543210'
-
 export default function CartPage() {
   const { items, subtotal, totalItems, updateQuantity, removeItem, clearCart } = useCart()
   const [checkingOut, setCheckingOut] = useState(false)
+  const [whatsappNumber, setWhatsappNumber] = useState('')
+  const [businessName, setBusinessName] = useState('')
+
+  useEffect(() => {
+    fetch('/api/settings').then((r) => r.json()).then((s) => {
+      setWhatsappNumber(s.whatsappNumber || '')
+      setBusinessName(s.businessName || '')
+    })
+  }, [])
 
   const handleCheckout = () => {
     setCheckingOut(true)
@@ -22,10 +28,10 @@ export default function CartPage() {
           (i.offerPrice ?? i.price ?? 0) * i.quantity
         )}`
     )
-    const message = `Hi Diecast Heaven! I'd like to order:\n\n${lines.join(
+    const message = `Hi ${businessName || 'Diecast Heaven'}! I'd like to order:\n\n${lines.join(
       '\n'
     )}\n\nTotal: ${formatPrice(subtotal)}\n\nPlease confirm availability and payment details.`
-    const link = buildWhatsAppLink(WHATSAPP_NUMBER, message)
+    const link = buildWhatsAppLink(whatsappNumber, message)
     window.open(link, '_blank')
     setTimeout(() => setCheckingOut(false), 1500)
   }
@@ -99,12 +105,10 @@ export default function CartPage() {
                     className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-hotwheels-black flex-shrink-0"
                   >
                     {item.image ? (
-                      <Image
+                      <img
                         src={item.image}
                         alt={item.title}
-                        fill
-                        className="object-cover"
-                        sizes="112px"
+                        className="absolute inset-0 w-full h-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">

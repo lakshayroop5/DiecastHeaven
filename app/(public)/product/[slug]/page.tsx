@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
 import Link from 'next/link'
 import { getProductBySlug, getRelatedProducts } from '@/lib/queries'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
@@ -22,7 +21,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   return {
-    title: `${product.title} | Diecast Heaven`,
+    title: `${product.title} | ${process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven'}`,
     description:
       product.shortDesc ||
       product.description?.substring(0, 160) ||
@@ -35,7 +34,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 }
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params
@@ -186,12 +185,10 @@ function ProductImageGallery({
     <div className="flex flex-col">
       <div className="aspect-square relative bg-hotwheels-gray rounded-lg overflow-hidden mb-4">
         {mainImage ? (
-          <Image
+          <img
             src={mainImage.imageUrl}
             alt={mainImage.altText || title}
-            fill
-            className="object-cover"
-            priority
+            className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full bg-hotwheels-black flex items-center justify-center">
@@ -207,11 +204,10 @@ function ProductImageGallery({
               key={image.imageUrl}
               className="aspect-square relative bg-hotwheels-gray rounded overflow-hidden cursor-pointer hover:opacity-80"
             >
-              <Image
+              <img
                 src={image.imageUrl}
                 alt={image.altText || `${title} view ${index + 1}`}
-                fill
-                className="object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             </div>
           ))}

@@ -17,7 +17,7 @@ interface CatalogPageProps {
   }>
 }
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const params = await searchParams

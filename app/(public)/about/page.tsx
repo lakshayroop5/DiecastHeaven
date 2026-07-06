@@ -2,11 +2,11 @@ import WhatsAppCTA from '@/components/public/whatsapp-cta'
 import { getSiteSettings } from '@/lib/queries'
 import type { Metadata } from 'next'
 
-export const revalidate = 3600 // ISR
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'About | Hot Wheels Collector',
+    title: `About | ${process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven'}`,
     description: 'Learn about our Hot Wheels collection and expertise',
   }
 }
@@ -20,7 +20,7 @@ export default async function AboutPage() {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-hotwheels-white mb-4">
-            About {settings?.businessName || 'Hot Wheels Collector'}
+            About {settings?.businessName || process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven'}
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Your trusted source for premium Hot Wheels diecast collector cars
