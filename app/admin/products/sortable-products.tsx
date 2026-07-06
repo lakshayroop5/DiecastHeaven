@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
 import { CSS } from '@dnd-kit/utilities'
@@ -20,7 +20,10 @@ export default function SortableProducts({ products: initial }: { products: Prod
   const [products, setProducts] = useState(initial)
   const [saving, setSaving] = useState(false)
   const router = useRouter()
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
+  )
 
   const handleDragEnd = async (event: any) => {
     const { active, over } = event
@@ -82,7 +85,7 @@ function SortableRow({ product: p }: { product: Product }) {
 
   return (
     <tr ref={setNodeRef} style={style} className="border-b border-hotwheels-black hover:bg-hotwheels-black/50">
-      <td className="px-4 py-3 cursor-grab active:cursor-grabbing text-gray-500" {...attributes} {...listeners}>
+      <td className="px-4 py-3 cursor-grab active:cursor-grabbing text-gray-500 select-none" style={{ touchAction: 'none' }} {...attributes} {...listeners}>
         ⠿
       </td>
       <td className="px-4 py-3 font-medium">{p.title}</td>
