@@ -37,6 +37,10 @@ Thumbs.db
 /auth-wal
 /init
 /init-wal
+/db
+/db-wal
+/help
+/help-wal
 
 # Local source images (deployed copies live in public/)
 images/
