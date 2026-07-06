@@ -14,13 +14,13 @@ async function safeQuery<T>(query: Promise<T>, fallback: T): Promise<T> {
 const DEFAULT_INCLUDE = {
   brand: true,
   categories: { include: { category: true } },
-  images: { orderBy: { sortOrder: 'asc' as const } },
+  images: true,
 }
 
 const SEARCH_INCLUDE = {
   brand: true,
   categories: { include: { category: true } },
-  images: { orderBy: { sortOrder: 'asc' as const }, take: 1 },
+  images: { take: 1 },
 }
 
 export function getSiteSettings() {
@@ -40,7 +40,6 @@ export function getFeaturedProducts(limit = 6): Promise<ProductWithRelations[]> 
     prisma.product.findMany({
       where: { status: 'PUBLISHED', featured: true },
       include: DEFAULT_INCLUDE,
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
       take: limit,
     }) as Promise<ProductWithRelations[]>,
     []
@@ -52,7 +51,6 @@ export function getPublishedProducts(): Promise<ProductWithRelations[]> {
     prisma.product.findMany({
       where: { status: 'PUBLISHED' },
       include: DEFAULT_INCLUDE,
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
     }) as Promise<ProductWithRelations[]>,
     []
   )
@@ -96,7 +94,6 @@ export function getCatalogProducts({
     prisma.product.findMany({
       where: { AND: conditions },
       include: DEFAULT_INCLUDE,
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
     }) as Promise<ProductWithRelations[]>,
     []
   )
@@ -126,7 +123,6 @@ export function getRelatedProducts(
         categories: { some: { categoryId: { in: categoryIds } } },
       },
       include: SEARCH_INCLUDE,
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
       take: limit,
     }) as Promise<ProductWithRelations[]>,
     []
