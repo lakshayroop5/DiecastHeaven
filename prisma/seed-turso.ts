@@ -55,6 +55,8 @@ async function createTables() {
       "price_text" TEXT,
       "status" TEXT NOT NULL DEFAULT 'DRAFT',
       "featured" INTEGER NOT NULL DEFAULT 0,
+      "sort_order" INTEGER NOT NULL DEFAULT 0,
+      "stock" INTEGER NOT NULL DEFAULT 0,
       "brand_id" TEXT,
       "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
