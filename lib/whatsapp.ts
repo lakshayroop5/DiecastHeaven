@@ -23,12 +23,11 @@ function formatPhoneForWhatsApp(phoneNumber: string): string {
  */
 export function buildWhatsAppLink(
   phoneNumber: string,
-  message: string
+  message?: string
 ): string {
   const formattedPhone = formatPhoneForWhatsApp(phoneNumber)
-  const encodedMessage = encodeURIComponent(message)
-  
-  return `${WHATSAPP_BASE_URL}/${formattedPhone}?text=${encodedMessage}`
+  const base = `${WHATSAPP_BASE_URL}/${formattedPhone}`
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base
 }
 
 /**
@@ -60,20 +59,3 @@ export function buildProductInquiryLink(
   return buildWhatsAppLink(settings.whatsappNumber, message)
 }
 
-/**
- * Formats phone number for display
- */
-export function formatPhoneNumber(phoneNumber: string): string {
-  const digits = phoneNumber.replace(/\D/g, '')
-  
-  if (digits.length === 12 && digits.startsWith('91')) {
-    const number = digits.substring(2)
-    return `+91 ${number.substring(0, 5)} ${number.substring(5)}`
-  }
-  
-  if (digits.length === 10) {
-    return `+91 ${digits.substring(0, 5)} ${digits.substring(5)}`
-  }
-  
-  return phoneNumber
-}

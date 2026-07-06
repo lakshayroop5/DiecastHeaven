@@ -44,6 +44,8 @@ model Product {
   priceText   String?           @map("price_text")
   status      String            @default("DRAFT")
   featured    Boolean           @default(false)
+  sortOrder   Int               @default(0) @map("sort_order")
+  stock       Int               @default(0)
   brandId     String?           @map("brand_id")
   brand       Brand?            @relation(fields: [brandId], references: [id])
   categories  ProductCategory[]
@@ -69,6 +71,7 @@ model ProductImage {
   productId String   @map("product_id")
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   imageUrl  String   @map("image_url")
+  data      String?  @default("")
   altText   String?  @map("alt_text")
   sortOrder Int      @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at")

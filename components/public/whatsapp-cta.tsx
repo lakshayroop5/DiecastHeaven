@@ -10,9 +10,9 @@ interface WhatsAppCTAProps {
 
 const DEFAULT_SETTINGS = {
   id: '',
-  businessName: 'Hot Wheels Collector',
-  whatsappNumber: '919876543210',
-  whatsappDefaultMessage: 'Hi, I am interested in {product}. Please share more details.',
+  businessName: process.env.DEFAULT_BUSINESS_NAME || '',
+  whatsappNumber: process.env.WHATSAPP_NUMBER || '',
+  whatsappDefaultMessage: process.env.WHATSAPP_MESSAGE || '',
   heroTitle: '',
   heroSubtitle: '',
 }

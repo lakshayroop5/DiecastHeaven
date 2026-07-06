@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { getSiteSettings } from '@/lib/queries'
+import { buildWhatsAppLink } from '@/lib/whatsapp'
 
 const QUICK_LINKS = [
   { href: '/', label: 'Home' },
@@ -7,7 +9,10 @@ const QUICK_LINKS = [
   { href: '/about', label: 'About' },
 ] as const
 
-export default function Footer() {
+export default async function Footer() {
+  const settings = await getSiteSettings()
+  const whatsappNumber = settings?.whatsappNumber || ''
+
   return (
     <footer className="bg-hotwheels-gray border-t border-hotwheels-black">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -45,20 +50,22 @@ export default function Footer() {
             <p className="mt-4 text-sm text-gray-300">
               Contact us via WhatsApp for fastest response on product inquiries.
             </p>
-            <a
-              href="https://wa.me/919876543210"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-block text-sm text-hotwheels-red hover:text-hotwheels-yellow transition-colors"
-            >
-              Chat on WhatsApp &rarr;
-            </a>
+            {whatsappNumber && (
+              <a
+                href={buildWhatsAppLink(whatsappNumber)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-block text-sm text-hotwheels-red hover:text-hotwheels-yellow transition-colors"
+              >
+                Chat on WhatsApp &rarr;
+              </a>
+            )}
           </div>
         </div>
 
         <div className="mt-8 border-t border-hotwheels-black pt-8">
           <p className="text-center text-xs text-gray-400">
-            &copy; {new Date().getFullYear()} Diecast Heaven. All rights reserved.
+            &copy; {new Date().getFullYear()} {settings?.businessName || process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven'}. All rights reserved.
           </p>
         </div>
       </div>
