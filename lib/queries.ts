@@ -6,12 +6,7 @@ async function safeQuery<T>(query: Promise<T>, fallback: T): Promise<T> {
   try {
     return await query
   } catch (error: any) {
-    console.error('DB query error:', JSON.stringify({
-      code: error?.code,
-      message: error?.message,
-      meta: error?.meta,
-      clientVersion: error?.clientVersion,
-    }))
+    console.error('DB query error:', error?.code || error?.message || error)
     return fallback
   }
 }
