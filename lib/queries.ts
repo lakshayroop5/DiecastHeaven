@@ -5,8 +5,8 @@ import type { ProductWithRelations } from './types'
 async function safeQuery<T>(query: Promise<T>, fallback: T): Promise<T> {
   try {
     return await query
-  } catch (error) {
-    console.error('DB query error:', error)
+  } catch (error: any) {
+    console.error('DB query error:', error?.code || error?.message || error)
     return fallback
   }
 }
