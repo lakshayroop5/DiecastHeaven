@@ -9,34 +9,59 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Brand {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("brands")
+}
+
 model Category {
-  id          String    @id @default(cuid())
+  id          String            @id @default(cuid())
   name        String
-  slug        String    @unique
+  slug        String            @unique
   description String?
-  products    Product[]
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  products    ProductCategory[]
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
 
   @@map("categories")
 }
 
 model Product {
-  id          String   @id @default(cuid())
+  id          String            @id @default(cuid())
   title       String
-  slug        String   @unique
+  slug        String            @unique
   description String?
-  shortDesc   String?  @map("short_desc")
-  priceText   String?  @map("price_text")
-  status      String   @default("DRAFT")
-  featured    Boolean  @default(false)
-  categoryId  String   @map("category_id")
-  category    Category @relation(fields: [categoryId], references: [id])
+  shortDesc   String?           @map("short_desc")
+  scale       String?
+  price       Float?
+  offerPrice  Float?            @map("offer_price")
+  priceText   String?           @map("price_text")
+  status      String            @default("DRAFT")
+  featured    Boolean           @default(false)
+  brandId     String?           @map("brand_id")
+  brand       Brand?            @relation(fields: [brandId], references: [id])
+  categories  ProductCategory[]
   images      ProductImage[]
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
 
   @@map("products")
+}
+
+model ProductCategory {
+  productId  String   @map("product_id")
+  categoryId String   @map("category_id")
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@map("product_categories")
 }
 
 model ProductImage {

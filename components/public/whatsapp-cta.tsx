@@ -5,7 +5,7 @@ import { buildProductInquiryLink, buildGeneralInquiryLink } from '@/lib/whatsapp
 
 interface WhatsAppCTAProps {
   productName?: string
-  variant?: 'primary' | 'secondary' | 'small'
+  variant?: 'primary' | 'secondary' | 'small' | 'hero'
 }
 
 const DEFAULT_SETTINGS = {
@@ -21,6 +21,7 @@ const VARIANT_STYLES = {
   primary: 'bg-hotwheels-red text-white px-6 py-3 hover:bg-red-700',
   secondary: 'bg-hotwheels-gray text-hotwheels-white px-6 py-3 hover:bg-hotwheels-black border border-hotwheels-red',
   small: 'bg-hotwheels-red text-white px-3 py-1.5 text-sm hover:bg-red-700',
+  hero: 'border border-white/40 text-white px-6 py-3 hover:bg-white/10',
 } as const
 
 export default function WhatsAppCTA({ 

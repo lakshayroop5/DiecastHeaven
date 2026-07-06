@@ -1,11 +1,17 @@
 import prisma from './prisma'
-import type { ProductWithRelations } from './types'
+import type { ProductWithRelations, ProductWithOneImage } from './types'
 
-// Repository class implementing repository pattern for data access
 class ProductRepository {
-  static readonly DEFAULT_INCLUDE = {
-    category: true,
+  private static readonly DEFAULT_INCLUDE = {
+    brand: true,
+    categories: { include: { category: true } },
     images: { orderBy: { sortOrder: 'asc' as const } },
+  }
+
+  private static readonly SEARCH_INCLUDE = {
+    brand: true,
+    categories: { include: { category: true } },
+    images: { orderBy: { sortOrder: 'asc' as const }, take: 1 },
   }
 
   private static handleQuery<T>(query: Promise<T>, errorMessage: string): Promise<T> {
@@ -26,6 +32,13 @@ class ProductRepository {
     return this.handleQuery(
       prisma.category.findMany({ orderBy: { name: 'asc' } }),
       'Error fetching categories:'
+    )
+  }
+
+  static async getBrands() {
+    return this.handleQuery(
+      prisma.brand.findMany({ orderBy: { name: 'asc' } }),
+      'Error fetching brands:'
     )
   }
 
@@ -52,10 +65,57 @@ class ProductRepository {
     )
   }
 
+  static async getCatalogProducts({
+    search,
+    categorySlug,
+    brandSlug,
+  }: {
+    search?: string
+    categorySlug?: string
+    brandSlug?: string
+  }): Promise<ProductWithRelations[]> {
+    const conditions: any[] = [{ status: 'PUBLISHED' }]
+
+    if (search) {
+      conditions.push({
+        OR: [
+          { title: { contains: search } },
+          { shortDesc: { contains: search } },
+          { brand: { name: { contains: search } } },
+          { categories: { some: { category: { name: { contains: search } } } } },
+        ],
+      })
+    }
+
+    if (categorySlug) {
+      conditions.push({
+        categories: { some: { category: { slug: categorySlug } } },
+      })
+    }
+
+    if (brandSlug) {
+      conditions.push({
+        brand: { slug: brandSlug },
+      })
+    }
+
+    return this.handleQuery(
+      prisma.product.findMany({
+        where: { AND: conditions },
+        include: this.DEFAULT_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+      }) as Promise<ProductWithRelations[]>,
+      'Error fetching catalog products:'
+    )
+  }
+
   static async getPublishedProductsByCategory(categoryId: string): Promise<ProductWithRelations[]> {
     return this.handleQuery(
       prisma.product.findMany({
-        where: { status: 'PUBLISHED', categoryId },
+        where: {
+          status: 'PUBLISHED',
+          categories: { some: { categoryId } },
+        },
         include: this.DEFAULT_INCLUDE,
         orderBy: { createdAt: 'desc' },
       }) as Promise<ProductWithRelations[]>,
@@ -80,14 +140,12 @@ class ProductRepository {
           status: 'PUBLISHED',
           OR: [
             { title: { contains: query } },
-            { description: { contains: query } },
             { shortDesc: { contains: query } },
+            { brand: { name: { contains: query } } },
+            { categories: { some: { category: { name: { contains: query } } } } },
           ],
         },
-        include: {
-          ...this.DEFAULT_INCLUDE,
-          images: { orderBy: { sortOrder: 'asc' }, take: 1 },
-        },
+        include: this.SEARCH_INCLUDE,
         orderBy: { createdAt: 'desc' },
       }) as Promise<ProductWithRelations[]>,
       'Error searching products:'
@@ -95,40 +153,45 @@ class ProductRepository {
   }
 
   static async getRelatedProducts(
-    categoryId: string,
+    categoryIds: string[],
     excludeProductId: string,
     limit = 4
-  ): Promise<ProductWithRelations[]> {
+  ): Promise<ProductWithOneImage[]> {
+    if (categoryIds.length === 0) return []
     return this.handleQuery(
       prisma.product.findMany({
         where: {
           status: 'PUBLISHED',
-          categoryId,
           id: { not: excludeProductId },
+          categories: { some: { categoryId: { in: categoryIds } } },
         },
-        include: {
-          ...this.DEFAULT_INCLUDE,
-          images: { orderBy: { sortOrder: 'asc' }, take: 1 },
-        },
+        include: this.SEARCH_INCLUDE,
         orderBy: { createdAt: 'desc' },
         take: limit,
-      }) as Promise<ProductWithRelations[]>,
+      }) as Promise<ProductWithOneImage[]>,
       'Error fetching related products:'
     )
   }
 }
 
-// Export individual functions for backward compatibility
 export const getSiteSettings = () => ProductRepository.getSiteSettings()
 export const getCategories = () => ProductRepository.getCategories()
-export const getFeaturedProducts = (limit?: number) => 
+export const getBrands = () => ProductRepository.getBrands()
+export const getFeaturedProducts = (limit?: number) =>
   ProductRepository.getFeaturedProducts(limit)
 export const getPublishedProducts = () => ProductRepository.getPublishedProducts()
-export const getPublishedProductsByCategory = (categoryId: string) => 
+export const getCatalogProducts = (params: {
+  search?: string
+  categorySlug?: string
+  brandSlug?: string
+}) => ProductRepository.getCatalogProducts(params)
+export const getPublishedProductsByCategory = (categoryId: string) =>
   ProductRepository.getPublishedProductsByCategory(categoryId)
-export const getProductBySlug = (slug: string) => ProductRepository.getProductBySlug(slug)
-export const searchProducts = (query: string) => ProductRepository.searchProducts(query)
-export const getRelatedProducts = (categoryId: string, excludeProductId: string, limit?: number) => 
-  ProductRepository.getRelatedProducts(categoryId, excludeProductId, limit)
+export const getProductBySlug = (slug: string) =>
+  ProductRepository.getProductBySlug(slug)
+export const searchProducts = (query: string) =>
+  ProductRepository.searchProducts(query)
+export const getRelatedProducts = (categoryIds: string[], excludeProductId: string, limit?: number) =>
+  ProductRepository.getRelatedProducts(categoryIds, excludeProductId, limit)
 
-export type { ProductWithRelations } from './types'
+export type { ProductWithRelations, ProductWithOneImage } from './types'

@@ -1,28 +1,39 @@
-import { getPublishedProducts, getCategories, searchProducts } from '@/lib/queries'
+import {
+  getCatalogProducts,
+  getCategories,
+  getBrands,
+} from '@/lib/queries'
 import ProductCard from '@/components/public/product-card'
 import CategoryFilter from '@/components/public/category-filter'
+import BrandFilter from '@/components/public/brand-filter'
 import EmptyState from '@/components/public/empty-state'
-import { Search } from 'lucide-react'
 
 interface CatalogPageProps {
-  searchParams: Promise<{ category?: string; search?: string }>
+  searchParams: Promise<{
+    category?: string
+    brand?: string
+    search?: string
+    view?: string
+  }>
 }
 
-export const revalidate = 3600 // ISR
+export const revalidate = 3600
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const params = await searchParams
-  const { category, search } = params
+  const { category, brand, search, view } = params
 
-  const [allProducts, categories] = await Promise.all([
-    search ? searchProducts(search) : getPublishedProducts(),
+  const [products, categories, brands] = await Promise.all([
+    getCatalogProducts({
+      search,
+      categorySlug: category,
+      brandSlug: brand,
+    }),
     getCategories(),
+    getBrands(),
   ])
 
-  // Filter by category if specified
-  const products = category && category !== 'all'
-    ? allProducts.filter(p => p.category?.slug === category)
-    : allProducts
+  const showBrandView = view === 'brands'
 
   return (
     <div className="min-h-screen bg-hotwheels-black">
@@ -30,19 +41,29 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-hotwheels-white mb-4">
-            {search ? `Search: "${search}"` : 'Catalog'}
+            {search
+              ? `Search: "${search}"`
+              : showBrandView
+              ? 'Shop by Brand'
+              : 'Catalog'}
           </h1>
-          
-          {/* Category Filter */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+
+          {/* Filters */}
+          <div className="space-y-4">
             <CategoryFilter categories={categories} />
-            
-            {search && (
-              <div className="text-sm text-gray-400">
-                Found {products.length} product{products.length !== 1 ? 's' : ''}
-              </div>
+
+            {showBrandView ? (
+              <BrandFilter brands={brands} layout="grid" />
+            ) : (
+              <BrandFilter brands={brands} />
             )}
           </div>
+
+          {search && (
+            <p className="mt-4 text-sm text-gray-400">
+              Found {products.length} product{products.length !== 1 ? 's' : ''}
+            </p>
+          )}
         </div>
 
         {/* Products Grid */}
@@ -58,16 +79,10 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
             title={search ? 'No products found' : 'No products available'}
             description={
               search
-                ? `No products match "${search}"${category ? ` in the selected category` : ''}. Try a different search.`
+                ? `No products match "${search}"${
+                    category ? ' in the selected category' : ''
+                  }. Try a different search.`
                 : 'Check back soon for new arrivals!'
-            }
-            action={
-              search
-                ? {
-                    label: 'Clear Filters',
-                    onClick: () => {},
-                  }
-                : undefined
             }
           />
         )}

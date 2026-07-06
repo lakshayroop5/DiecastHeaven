@@ -29,3 +29,14 @@ npm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Local tooling / temp files
+.kilo/
+.remember/
+auth
+auth-wal
+init
+init-wal
+
+# Local source images (deployed copies live in public/)
+images/

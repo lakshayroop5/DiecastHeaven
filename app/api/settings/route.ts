@@ -6,7 +6,7 @@ export async function GET() {
   
   if (!settings) {
     return NextResponse.json({
-      businessName: 'Hot Wheels Collector',
+      businessName: 'Diecast Heaven',
       whatsappNumber: '919876543210',
       whatsappDefaultMessage: 'Hi, I am interested in {product}. Please share more details.',
     })

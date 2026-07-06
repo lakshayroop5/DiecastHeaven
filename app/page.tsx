@@ -2,23 +2,32 @@ import Link from 'next/link'
 import Hero from '@/components/public/hero'
 import ProductCard from '@/components/public/product-card'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
-import { getFeaturedProducts, getCategories, getSiteSettings } from '@/lib/queries'
+import {
+  getFeaturedProducts,
+  getCategories,
+  getBrands,
+  getSiteSettings,
+} from '@/lib/queries'
 
-export const revalidate = 3600 // ISR: revalidate every hour
+export const revalidate = 3600
 
 export default async function HomePage() {
-  const [featuredProducts, categories, settings] = await Promise.all([
+  const [featuredProducts, categories, brands, settings] = await Promise.all([
     getFeaturedProducts(6),
     getCategories(),
+    getBrands(),
     getSiteSettings(),
   ])
 
   return (
     <>
-      {/* Hero Section */}
-      <Hero 
-        title={settings?.heroTitle || 'Premium Hot Wheels Collection'}
-        subtitle={settings?.heroSubtitle || 'Authentic diecast collector cars for serious enthusiasts'}
+      {/* Hero */}
+      <Hero
+        title={settings?.heroTitle || "India's Premium Diecast Destination"}
+        subtitle={
+          settings?.heroSubtitle ||
+          'Hot Wheels \u00b7 Majorette \u00b7 Matchbox \u00b7 Bburago \u00b7 Tomica'
+        }
       />
 
       {/* Featured Products */}
@@ -32,7 +41,7 @@ export default async function HomePage() {
               href="/catalog"
               className="text-sm font-medium text-hotwheels-red hover:text-hotwheels-yellow transition-colors"
             >
-              View All →
+              View All &rarr;
             </Link>
           </div>
 
@@ -50,13 +59,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Categories Preview */}
+      {/* Categories */}
       <section className="py-16 bg-hotwheels-gray">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-hotwheels-white mb-8">
             Shop by Category
           </h2>
-          
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {categories.map((category) => (
               <Link
@@ -73,22 +81,52 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Trust Section */}
+      {/* Shop by Brand */}
       <section className="py-16 bg-hotwheels-black">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-hotwheels-white">
+              Shop by Brand
+            </h2>
+            <Link
+              href="/catalog?view=brands"
+              className="text-sm font-medium text-hotwheels-red hover:text-hotwheels-yellow transition-colors"
+            >
+              View All &rarr;
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {brands.map((brand) => (
+              <Link
+                key={brand.id}
+                href={`/catalog?brand=${brand.slug}`}
+                className="group bg-hotwheels-gray rounded-lg p-4 text-center hover:bg-hotwheels-red/20 transition-colors border border-hotwheels-gray hover:border-hotwheels-red"
+              >
+                <h3 className="font-semibold text-sm text-hotwheels-white group-hover:text-hotwheels-yellow transition-colors">
+                  {brand.name}
+                </h3>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust */}
+      <section className="py-16 bg-hotwheels-gray">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>
-              <div className="text-4xl mb-4">🏎️</div>
+              <div className="text-4xl mb-4">&#x1F3CE;&#xFE0F;</div>
               <h3 className="text-xl font-bold text-hotwheels-white mb-2">Genuine Products</h3>
-              <p className="text-gray-400">Authentic Hot Wheels diecast cars sourced directly</p>
+              <p className="text-gray-400">Authentic diecast cars sourced directly from brands</p>
             </div>
             <div>
-              <div className="text-4xl mb-4">⚡</div>
+              <div className="text-4xl mb-4">&#x26A1;</div>
               <h3 className="text-xl font-bold text-hotwheels-white mb-2">Collector Quality</h3>
               <p className="text-gray-400">Carefully preserved for serious collectors</p>
             </div>
             <div>
-              <div className="text-4xl mb-4">💬</div>
+              <div className="text-4xl mb-4">&#x1F4AC;</div>
               <h3 className="text-xl font-bold text-hotwheels-white mb-2">Fast Replies</h3>
               <p className="text-gray-400">WhatsApp us for instant responses</p>
             </div>
@@ -96,7 +134,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* CTA */}
       <section className="py-16 bg-hotwheels-red">
         <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">

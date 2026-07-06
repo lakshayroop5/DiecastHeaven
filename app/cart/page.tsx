@@ -1,0 +1,216 @@
+'use client'
+
+import Link from 'next/link'
+import Image from 'next/image'
+import { useState } from 'react'
+import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
+import { useCart } from '@/lib/cart-context'
+import { formatPrice } from '@/lib/utils'
+import { buildWhatsAppLink } from '@/lib/whatsapp'
+
+const WHATSAPP_NUMBER = '919876543210'
+
+export default function CartPage() {
+  const { items, subtotal, totalItems, updateQuantity, removeItem, clearCart } = useCart()
+  const [checkingOut, setCheckingOut] = useState(false)
+
+  const handleCheckout = () => {
+    setCheckingOut(true)
+    const lines = items.map(
+      (i) =>
+        `- ${i.title} (x${i.quantity}) - ${formatPrice(
+          (i.offerPrice ?? i.price ?? 0) * i.quantity
+        )}`
+    )
+    const message = `Hi Diecast Heaven! I'd like to order:\n\n${lines.join(
+      '\n'
+    )}\n\nTotal: ${formatPrice(subtotal)}\n\nPlease confirm availability and payment details.`
+    const link = buildWhatsAppLink(WHATSAPP_NUMBER, message)
+    window.open(link, '_blank')
+    setTimeout(() => setCheckingOut(false), 1500)
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen bg-hotwheels-black flex items-center justify-center">
+        <div className="text-center px-4">
+          <div className="rounded-full bg-hotwheels-gray p-6 mb-4 inline-flex">
+            <ShoppingBag className="h-12 w-12 text-hotwheels-red" />
+          </div>
+          <h1 className="text-2xl font-bold text-hotwheels-white mb-2">
+            Your cart is empty
+          </h1>
+          <p className="text-gray-400 mb-8 max-w-sm mx-auto">
+            Looks like you haven't added any diecast cars yet. Browse our collection to find your next gem.
+          </p>
+          <Link
+            href="/catalog"
+            className="inline-block rounded-md bg-hotwheels-red px-6 py-3 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+          >
+            Browse Catalog
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-hotwheels-black">
+      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <Link
+              href="/catalog"
+              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-hotwheels-white transition-colors mb-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Continue Shopping
+            </Link>
+            <h1 className="text-3xl font-bold text-hotwheels-white">
+              Your Cart
+              <span className="text-gray-500 text-lg font-normal ml-2">
+                ({totalItems} item{totalItems !== 1 ? 's' : ''})
+              </span>
+            </h1>
+          </div>
+          <button
+            onClick={clearCart}
+            className="text-sm text-gray-400 hover:text-hotwheels-red transition-colors"
+          >
+            Clear all
+          </button>
+        </div>
+
+        <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+          {/* Cart Items */}
+          <div className="lg:col-span-2 space-y-4">
+            {items.map((item) => {
+              const unit = item.offerPrice ?? item.price ?? 0
+              const lineTotal = unit * item.quantity
+              return (
+                <div
+                  key={item.id}
+                  className="flex gap-4 bg-hotwheels-gray rounded-lg p-4 border border-hotwheels-black"
+                >
+                  {/* Image */}
+                  <Link
+                    href={`/product/${item.slug}`}
+                    className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-hotwheels-black flex-shrink-0"
+                  >
+                    {item.image ? (
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        fill
+                        className="object-cover"
+                        sizes="112px"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ShoppingBag className="h-6 w-6 text-gray-600" />
+                      </div>
+                    )}
+                  </Link>
+
+                  {/* Details */}
+                  <div className="flex-1 min-w-0">
+                    <Link href={`/product/${item.slug}`} className="block">
+                      <h3 className="text-base font-semibold text-hotwheels-white hover:text-hotwheels-yellow transition-colors">
+                        {item.title}
+                      </h3>
+                    </Link>
+                    <p className="text-sm text-hotwheels-yellow font-medium mt-1">
+                      {formatPrice(unit)}
+                    </p>
+
+                    {/* Quantity Controls */}
+                    <div className="flex items-center gap-3 mt-3">
+                      <div className="flex items-center bg-hotwheels-black rounded-full border border-hotwheels-gray">
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="h-3.5 w-3.5" />
+                        </button>
+                        <span className="px-3 text-sm font-semibold text-white min-w-8 text-center">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="text-sm text-gray-500 hover:text-hotwheels-red transition-colors flex items-center gap-1"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Line Total */}
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-lg font-bold text-hotwheels-white">
+                      {formatPrice(lineTotal)}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Order Summary */}
+          <div className="mt-8 lg:mt-0">
+            <div className="bg-hotwheels-gray rounded-lg p-6 border border-hotwheels-black sticky top-24">
+              <h2 className="text-lg font-bold text-hotwheels-white mb-4">
+                Order Summary
+              </h2>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between text-gray-300">
+                  <span>Items ({totalItems})</span>
+                  <span>{formatPrice(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-gray-300">
+                  <span>Shipping</span>
+                  <span className="text-green-400">Calculated on WhatsApp</span>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-hotwheels-black">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-base font-semibold text-hotwheels-white">
+                    Subtotal
+                  </span>
+                  <span className="text-2xl font-bold text-hotwheels-yellow">
+                    {formatPrice(subtotal)}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleCheckout}
+                disabled={checkingOut}
+                className="mt-6 w-full rounded-md bg-hotwheels-red px-5 py-3 text-sm font-bold text-white hover:bg-red-700 transition-colors disabled:opacity-60"
+              >
+                {checkingOut ? 'Opening WhatsApp...' : 'Checkout via WhatsApp'}
+              </button>
+
+              <p className="mt-3 text-xs text-gray-500 text-center">
+                You'll be redirected to WhatsApp to confirm your order and payment details.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

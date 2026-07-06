@@ -2,12 +2,16 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState } from 'react'
 import type { Product } from '@prisma/client'
 import WhatsAppCTA from './whatsapp-cta'
+import { formatPrice } from '@/lib/utils'
+import { useCart } from '@/lib/cart-context'
 
 interface ProductWithImages extends Product {
+  brand: { name: string; slug: string } | null
+  categories: Array<{ category: { name: string; slug: string } }>
   images: Array<{ imageUrl: string; altText: string | null }>
-  category: { name: string; slug: string } | null
 }
 
 interface ProductCardProps {
@@ -16,6 +20,22 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const mainImage = product.images[0]
+  const hasDiscount = product.offerPrice != null && product.price != null && product.offerPrice < product.price
+  const { addItem, totalItems } = useCart()
+  const [justAdded, setJustAdded] = useState(false)
+
+  const handleAddToCart = () => {
+    addItem({
+      id: product.id,
+      slug: product.slug,
+      title: product.title,
+      price: product.price,
+      offerPrice: product.offerPrice,
+      image: mainImage?.imageUrl || '',
+    })
+    setJustAdded(true)
+    setTimeout(() => setJustAdded(false), 1200)
+  }
 
   return (
     <article className="group relative bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black hover:border-hotwheels-red/50 transition-colors">
@@ -34,37 +54,89 @@ export default function ProductCard({ product }: ProductCardProps) {
               <span className="text-gray-500">No image</span>
             </div>
           )}
+
+          {hasDiscount && (
+            <div className="absolute top-2 right-2 bg-hotwheels-red text-white text-xs font-bold px-2 py-1 rounded">
+              SALE
+            </div>
+          )}
         </figure>
       </Link>
-      
+
       <div className="p-4">
+        {/* Brand */}
+        {product.brand && (
+          <p className="text-xs font-medium text-hotwheels-yellow uppercase tracking-wide mb-1">
+            {product.brand.name}
+          </p>
+        )}
+
+        {/* Title */}
         <Link href={`/product/${product.slug}`}>
           <h3 className="text-lg font-semibold text-hotwheels-white group-hover:text-hotwheels-yellow transition-colors">
             {product.title}
           </h3>
         </Link>
-        
-        <p className="mt-1 text-sm text-gray-400">
-          {product.category?.name}
-        </p>
-        
-        {product.priceText && (
-          <p className="mt-2 text-hotwheels-yellow font-medium">
-            {product.priceText}
+
+        {/* Category Badges */}
+        {product.categories.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {product.categories.slice(0, 3).map(({ category }) => (
+              <span
+                key={category.slug}
+                className="text-xs bg-hotwheels-black text-gray-300 px-2 py-0.5 rounded-full border border-hotwheels-gray"
+              >
+                {category.name}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Scale */}
+        {product.scale && (
+          <p className="text-xs text-gray-500 mt-1.5">
+            Scale: {product.scale}
           </p>
         )}
-        
+
+        {/* Price */}
+        <div className="mt-2 flex items-center gap-2">
+          {product.offerPrice != null && (
+            <span className="text-lg font-bold text-hotwheels-yellow">
+              {formatPrice(product.offerPrice)}
+            </span>
+          )}
+          {hasDiscount && product.price != null && (
+            <span className="text-sm text-gray-500 line-through">
+              {formatPrice(product.price)}
+            </span>
+          )}
+          {!hasDiscount && product.price != null && (
+            <span className="text-lg font-bold text-hotwheels-yellow">
+              {formatPrice(product.price)}
+            </span>
+          )}
+        </div>
+
+        {/* Short Description */}
         {product.shortDesc && (
           <p className="mt-2 text-sm text-gray-300 line-clamp-2">
             {product.shortDesc}
           </p>
         )}
-        
-        <div className="mt-4">
-          <WhatsAppCTA 
-            productName={product.title} 
-            variant="small"
-          />
+
+        <div className="mt-4 flex items-center gap-2">
+          <button
+            onClick={handleAddToCart}
+            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+              justAdded
+                ? 'bg-green-600 text-white'
+                : 'bg-hotwheels-red text-white hover:bg-red-700'
+            }`}
+          >
+            {justAdded ? 'Added!' : 'Add to Cart'}
+          </button>
+          <WhatsAppCTA productName={product.title} variant="small" />
         </div>
       </div>
     </article>
