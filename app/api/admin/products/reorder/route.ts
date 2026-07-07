@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { revalidateTag } from '@/lib/queries'
 
 export async function POST(req: NextRequest) {
   const { orderedIds } = await req.json() as { orderedIds: string[] }
@@ -11,6 +12,7 @@ export async function POST(req: NextRequest) {
     )
   )
 
+  revalidateTag('products')
   return NextResponse.json({ ok: true })
 }
 
@@ -20,5 +22,6 @@ export async function PATCH() {
   await prisma.$transaction(
     products.map((p, i) => prisma.product.update({ where: { id: p.id }, data: { sortOrder: i } }))
   )
+  revalidateTag('products')
   return NextResponse.json({ reindexed: products.length })
 }

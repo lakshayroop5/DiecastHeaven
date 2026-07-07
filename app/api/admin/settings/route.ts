@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { revalidateTag } from '@/lib/queries'
 
 export async function GET() {
   const settings = await prisma.siteSetting.findFirst()
@@ -20,5 +21,6 @@ export async function PUT(req: NextRequest) {
     ? await prisma.siteSetting.update({ where: { id: existing.id }, data: body })
     : await prisma.siteSetting.create({ data: body })
 
+  revalidateTag('settings')
   return NextResponse.json(saved)
 }

@@ -1,5 +1,70 @@
 import prisma from './prisma'
 import type { ProductWithRelations } from './types'
+import { unstable_cache, revalidateTag as nextRevalidateTag } from 'next/cache'
+import { cache } from 'react'
+
+// Memory cache for items exceeding Next.js's 2MB Data Cache limit (e.g. products with large base64 image data)
+const largeItemMemoryCache = new Map<string, { result: any; tags: string[]; timestamp: number }>()
+
+export function revalidateMemoryTag(tag: string) {
+  largeItemMemoryCache.forEach((value, key) => {
+    if (value.tags.includes(tag)) {
+      largeItemMemoryCache.delete(key)
+    }
+  })
+}
+
+// Unified revalidation helper for both Next.js Data Cache and local memory cache
+export function revalidateTag(tag: string) {
+  nextRevalidateTag(tag)
+  revalidateMemoryTag(tag)
+}
+
+// Custom wrapper to transparently bypass Next.js 2MB limit
+export function safeUnstableCache<T extends (...args: any[]) => Promise<any>>(
+  fn: T,
+  keyParts: string[],
+  options: { tags: string[] }
+): (...args: Parameters<T>) => ReturnType<T> {
+  const cachedFn = unstable_cache(
+    async (...args: any[]) => {
+      const result = await fn(...args)
+      if (result) {
+        // Estimate object size in bytes (using UTF-16 character sizing)
+        const jsonStr = JSON.stringify(result)
+        const size = jsonStr.length * 2
+        
+        // Next.js limit is 2MB. We use 1.5MB as a safe threshold.
+        if (size > 1.5 * 1024 * 1024) {
+          const cacheKey = [...keyParts, ...args.map((a) => String(a))].join(':')
+          largeItemMemoryCache.set(cacheKey, {
+            result,
+            tags: options.tags,
+            timestamp: Date.now(),
+          })
+          return { __is_large_item: true, cacheKey }
+        }
+      }
+      return result
+    },
+    keyParts,
+    options
+  )
+
+  return (async (...args: any[]) => {
+    const val = await cachedFn(...args)
+    if (val && typeof val === 'object' && '__is_large_item' in val) {
+      const cacheKey = (val as any).cacheKey
+      if (largeItemMemoryCache.has(cacheKey)) {
+        return largeItemMemoryCache.get(cacheKey)!.result
+      }
+      // If server restarted or entry evicted, fetch a fresh copy
+      return fn(...args)
+    }
+    return val
+  }) as any
+}
+
 async function safeQuery<T>(query: Promise<T>, fallback: T): Promise<T> {
   try {
     return await query
@@ -21,19 +86,44 @@ const SEARCH_INCLUDE = {
   images: { take: 1 },
 }
 
-export function getSiteSettings() {
+// 1. Site Settings
+const getSiteSettingsRaw = () => {
   return safeQuery(prisma.siteSetting.findFirst(), null)
 }
+export const getSiteSettings = cache(
+  safeUnstableCache(
+    getSiteSettingsRaw,
+    ['site-settings'],
+    { tags: ['settings'] }
+  )
+)
 
-export function getCategories() {
+// 2. Categories
+const getCategoriesRaw = () => {
   return safeQuery(prisma.category.findMany({ orderBy: { name: 'asc' } }), [])
 }
+export const getCategories = cache(
+  safeUnstableCache(
+    getCategoriesRaw,
+    ['categories'],
+    { tags: ['categories'] }
+  )
+)
 
-export function getBrands() {
+// 3. Brands
+const getBrandsRaw = () => {
   return safeQuery(prisma.brand.findMany({ orderBy: { name: 'asc' } }), [])
 }
+export const getBrands = cache(
+  safeUnstableCache(
+    getBrandsRaw,
+    ['brands'],
+    { tags: ['brands'] }
+  )
+)
 
-export function getFeaturedProducts(limit = 6): Promise<ProductWithRelations[]> {
+// 4. Featured Products
+const getFeaturedProductsRaw = (limit = 6): Promise<ProductWithRelations[]> => {
   return safeQuery(
     prisma.product.findMany({
       where: { status: 'PUBLISHED', featured: true },
@@ -44,8 +134,19 @@ export function getFeaturedProducts(limit = 6): Promise<ProductWithRelations[]> 
     []
   )
 }
+export const getFeaturedProducts = (limit = 6) => {
+  const getCached = cache(
+    safeUnstableCache(
+      async (l: number) => getFeaturedProductsRaw(l),
+      ['featured-products'],
+      { tags: ['products', 'featured-products'] }
+    )
+  )
+  return getCached(limit)
+}
 
-export function getPublishedProducts(): Promise<ProductWithRelations[]> {
+// 5. Published Products
+const getPublishedProductsRaw = (): Promise<ProductWithRelations[]> => {
   return safeQuery(
     prisma.product.findMany({
       where: { status: 'PUBLISHED' },
@@ -55,8 +156,16 @@ export function getPublishedProducts(): Promise<ProductWithRelations[]> {
     []
   )
 }
+export const getPublishedProducts = cache(
+  safeUnstableCache(
+    getPublishedProductsRaw,
+    ['published-products'],
+    { tags: ['products', 'published-products'] }
+  )
+)
 
-export function getCatalogProducts({
+// 6. Catalog Products
+const getCatalogProductsRaw = ({
   search,
   categorySlug,
   brandSlug,
@@ -64,7 +173,7 @@ export function getCatalogProducts({
   search?: string
   categorySlug?: string
   brandSlug?: string
-}): Promise<ProductWithRelations[]> {
+}): Promise<ProductWithRelations[]> => {
   const conditions: any[] = [{ status: 'PUBLISHED' }]
 
   if (search) {
@@ -99,8 +208,24 @@ export function getCatalogProducts({
     []
   )
 }
+export const getCatalogProducts = (args: {
+  search?: string
+  categorySlug?: string
+  brandSlug?: string
+}) => {
+  const getCached = cache(
+    safeUnstableCache(
+      async (s?: string, c?: string, b?: string) =>
+        getCatalogProductsRaw({ search: s, categorySlug: c, brandSlug: b }),
+      ['catalog-products'],
+      { tags: ['products', 'catalog-products'] }
+    )
+  )
+  return getCached(args.search, args.categorySlug, args.brandSlug)
+}
 
-export function getCatalogProductSlugs({
+// 7. Catalog Product Slugs
+const getCatalogProductSlugsRaw = ({
   search,
   categorySlug,
   brandSlug,
@@ -108,7 +233,7 @@ export function getCatalogProductSlugs({
   search?: string
   categorySlug?: string
   brandSlug?: string
-}): Promise<{ slug: string }[]> {
+}): Promise<{ slug: string }[]> => {
   const conditions: any[] = [{ status: 'PUBLISHED' }]
 
   if (search) {
@@ -143,8 +268,24 @@ export function getCatalogProductSlugs({
     []
   )
 }
+export const getCatalogProductSlugs = (args: {
+  search?: string
+  categorySlug?: string
+  brandSlug?: string
+}) => {
+  const getCached = cache(
+    safeUnstableCache(
+      async (s?: string, c?: string, b?: string) =>
+        getCatalogProductSlugsRaw({ search: s, categorySlug: c, brandSlug: b }),
+      ['catalog-product-slugs'],
+      { tags: ['products', 'catalog-product-slugs'] }
+    )
+  )
+  return getCached(args.search, args.categorySlug, args.brandSlug)
+}
 
-export function getFeaturedProductSlugs(limit = 6): Promise<{ slug: string }[]> {
+// 8. Featured Product Slugs
+const getFeaturedProductSlugsRaw = (limit = 6): Promise<{ slug: string }[]> => {
   return safeQuery(
     prisma.product.findMany({
       where: { status: 'PUBLISHED', featured: true },
@@ -155,8 +296,19 @@ export function getFeaturedProductSlugs(limit = 6): Promise<{ slug: string }[]> 
     []
   )
 }
+export const getFeaturedProductSlugs = (limit = 6) => {
+  const getCached = cache(
+    safeUnstableCache(
+      async (l: number) => getFeaturedProductSlugsRaw(l),
+      ['featured-product-slugs'],
+      { tags: ['products', 'featured-product-slugs'] }
+    )
+  )
+  return getCached(limit)
+}
 
-export function getProductBySlug(slug: string): Promise<ProductWithRelations | null> {
+// 9. Product By Slug
+const getProductBySlugRaw = (slug: string): Promise<ProductWithRelations | null> => {
   return safeQuery(
     prisma.product.findUnique({
       where: { slug },
@@ -165,12 +317,23 @@ export function getProductBySlug(slug: string): Promise<ProductWithRelations | n
     null
   )
 }
+export const getProductBySlug = (slug: string) => {
+  const getCached = cache(
+    safeUnstableCache(
+      async (s: string) => getProductBySlugRaw(s),
+      ['product-by-slug'],
+      { tags: ['products'] }
+    )
+  )
+  return getCached(slug)
+}
 
-export function getRelatedProducts(
+// 10. Related Products
+const getRelatedProductsRaw = (
   categoryIds: string[],
   excludeProductId: string,
   limit = 4
-): Promise<ProductWithRelations[]> {
+): Promise<ProductWithRelations[]> => {
   if (categoryIds.length === 0) return Promise.resolve([])
   return safeQuery(
     prisma.product.findMany({
@@ -184,4 +347,22 @@ export function getRelatedProducts(
     }) as Promise<ProductWithRelations[]>,
     []
   )
+}
+export const getRelatedProducts = (
+  categoryIds: string[],
+  excludeProductId: string,
+  limit = 4
+) => {
+  const getCached = cache(
+    safeUnstableCache(
+      async (cIdsStr: string, exId: string, lim: number) => {
+        const cIds = cIdsStr ? cIdsStr.split(',') : []
+        return getRelatedProductsRaw(cIds, exId, lim)
+      },
+      ['related-products'],
+      { tags: ['products', 'related-products'] }
+    )
+  )
+  const sortedIdsStr = [...categoryIds].sort().join(',')
+  return getCached(sortedIdsStr, excludeProductId, limit)
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { revalidateTag } from '@/lib/queries'
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const product = await prisma.product.findUnique({
@@ -37,10 +38,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     include: { brand: true, categories: { include: { category: true } }, images: true },
   })
 
+  revalidateTag('products')
   return NextResponse.json(updated)
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   await prisma.product.delete({ where: { id: params.id } })
+  revalidateTag('products')
   return NextResponse.json({ ok: true })
 }

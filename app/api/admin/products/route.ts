@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { revalidateTag } from '@/lib/queries'
 
 export async function GET() {
   const products = await prisma.product.findMany({
@@ -36,5 +37,6 @@ export async function POST(req: NextRequest) {
     include: { brand: true, categories: { include: { category: true } }, images: true },
   })
 
+  revalidateTag('products')
   return NextResponse.json(created, { status: 201 })
 }
