@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toSlug } from '@/lib/slug'
-import Field from '../field'
 
 interface Brand { id: string; name: string }
 interface Category { id: string; name: string }
@@ -116,11 +115,23 @@ export default function ProductForm({ product }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Title" required value={form.title} onChange={(v) => set('title', v)} />
-        <Field label="Slug" value={form.slug} onChange={(v) => set('slug', v)} placeholder="auto-generated" />
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Title</label>
+          <input type="text" value={form.title} required onChange={(v) => set('title', v.target.value)}
+            className="w-full px-3 py-2 rounded bg-hotwheels-black text-white border border-hotwheels-gray focus:border-hotwheels-red outline-none text-sm" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Slug</label>
+          <input type="text" value={form.slug} onChange={(v) => set('slug', v.target.value)} placeholder="auto-generated"
+            className="w-full px-3 py-2 rounded bg-hotwheels-black text-white border border-hotwheels-gray focus:border-hotwheels-red outline-none text-sm" />
+        </div>
       </div>
 
-      <Field label="Short Description" value={form.shortDesc} onChange={(v) => set('shortDesc', v)} />
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Short Description</label>
+        <input type="text" value={form.shortDesc} onChange={(v) => set('shortDesc', v.target.value)}
+          className="w-full px-3 py-2 rounded bg-hotwheels-black text-white border border-hotwheels-gray focus:border-hotwheels-red outline-none text-sm" />
+      </div>
 
       <div>
         <label className="block text-sm text-gray-400 mb-1">Description</label>
@@ -129,10 +140,26 @@ export default function ProductForm({ product }: Props) {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <Field label="Scale" value={form.scale} onChange={(v) => set('scale', v)} placeholder="1:64" />
-        <Field label="Price" type="number" value={form.price} onChange={(v) => set('price', v)} />
-        <Field label="Offer Price" type="number" value={form.offerPrice} onChange={(v) => set('offerPrice', v)} />
-        <Field label="Stock" type="number" value={form.stock} onChange={(v) => set('stock', v)} />
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Scale</label>
+          <input type="text" value={form.scale} onChange={(v) => set('scale', v.target.value)} placeholder="1:64"
+            className="w-full px-3 py-2 rounded bg-hotwheels-black text-white border border-hotwheels-gray focus:border-hotwheels-red outline-none text-sm" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Price</label>
+          <input type="number" value={form.price} onChange={(v) => set('price', v.target.value)}
+            className="w-full px-3 py-2 rounded bg-hotwheels-black text-white border border-hotwheels-gray focus:border-hotwheels-red outline-none text-sm" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Offer Price</label>
+          <input type="number" value={form.offerPrice} onChange={(v) => set('offerPrice', v.target.value)}
+            className="w-full px-3 py-2 rounded bg-hotwheels-black text-white border border-hotwheels-gray focus:border-hotwheels-red outline-none text-sm" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Stock</label>
+          <input type="number" value={form.stock} onChange={(v) => set('stock', v.target.value)}
+            className="w-full px-3 py-2 rounded bg-hotwheels-black text-white border border-hotwheels-gray focus:border-hotwheels-red outline-none text-sm" />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -184,7 +211,11 @@ export default function ProductForm({ product }: Props) {
             </div>
           )}
         </div>
-        <Field label="Alt Text" value={form.imageAlt} onChange={(v) => set('imageAlt', v)} placeholder="Image description" />
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Alt Text</label>
+          <input type="text" value={form.imageAlt} onChange={(v) => set('imageAlt', v.target.value)} placeholder="Image description"
+            className="w-full px-3 py-2 rounded bg-hotwheels-black text-white border border-hotwheels-gray focus:border-hotwheels-red outline-none text-sm" />
+        </div>
       </div>
 
       <label className="flex items-center gap-2 text-sm">

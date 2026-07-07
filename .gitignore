@@ -44,5 +44,4 @@ Thumbs.db
 
 # Local source images (deployed copies live in public/)
 images/
-.vercel
 .env*

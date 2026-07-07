@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { Menu, X, Search, ChevronDown, ShoppingBag } from 'lucide-react'
 import { useState, useEffect, useRef, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils'
 import { useCart } from '@/lib/cart-context'
 import { buildWhatsAppLink } from '@/lib/whatsapp'
 
@@ -99,12 +98,11 @@ export default function Header({ whatsappNumber = '' }: HeaderProps) {
             >
               <Link
                 href={href}
-                className={cn(
-                  'text-sm font-medium transition-colors inline-flex items-center gap-1',
+                className={`text-sm font-medium transition-colors inline-flex items-center gap-1 ${
                   item.name === 'Home'
                     ? 'text-[#D4A843] border-b-2 border-[#D4A843] pb-0.5'
                     : 'text-white hover:text-[#D4A843]'
-                )}
+                }`}
               >
                 {item.name}
                 {item.children && <ChevronDown className="w-3 h-3" />}

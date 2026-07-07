@@ -1,4 +1,4 @@
-import type { Product, Category, SiteSetting, Brand } from '@prisma/client'
+import type { Product, Category, Brand } from '@prisma/client'
 
 export type ProductWithRelations = Product & {
   brand: Brand | null
@@ -10,8 +10,3 @@ export type ProductWithRelations = Product & {
     altText: string | null
   }>
 }
-
-export type SiteSettings = Pick<
-  SiteSetting,
-  'id' | 'businessName' | 'whatsappNumber' | 'whatsappDefaultMessage' | 'heroTitle' | 'heroSubtitle'
->

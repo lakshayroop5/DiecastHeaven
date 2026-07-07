@@ -1,7 +1,7 @@
 import prisma from '@/lib/prisma'
 import { toSlug } from '@/lib/slug'
-import InlineForm from '../inline-form'
 import DeleteButton from '../delete-button'
+import AddForm from '../add-form'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +15,7 @@ export default function AdminBrands() {
     <div>
       <h1 className="text-2xl font-bold mb-6">Brands</h1>
       <div className="mb-6 max-w-md">
-        <InlineForm placeholder="New brand name" onAdd={addBrand} />
+        <AddForm placeholder="New brand name" onAdd={addBrand} />
       </div>
       <BrandList />
     </div>

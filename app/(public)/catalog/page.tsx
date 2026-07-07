@@ -1,8 +1,7 @@
 import { Suspense } from 'react'
 import { getCategories, getBrands } from '@/lib/queries'
 import ProductGrid from '@/components/public/product-grid'
-import CategoryFilter from '@/components/public/category-filter'
-import BrandFilter from '@/components/public/brand-filter'
+import PillFilter from '@/components/public/pill-filter'
 
 interface CatalogPageProps {
   searchParams: Promise<{
@@ -52,11 +51,11 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
               : 'Catalog'}
           </h1>
           <div className="space-y-4">
-            <CategoryFilter categories={categories} />
+            <PillFilter items={categories} param="category" />
             {showBrandView ? (
-              <BrandFilter brands={brands} layout="grid" />
+              <PillFilter items={brands} param="brand" layout="grid" />
             ) : (
-              <BrandFilter brands={brands} />
+              <PillFilter items={brands} param="brand" />
             )}
           </div>
           {search && (

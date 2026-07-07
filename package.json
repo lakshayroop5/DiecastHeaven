@@ -26,13 +26,11 @@
     "@libsql/client": "^0.8.0",
     "@prisma/adapter-libsql": "^5.22.0",
     "@prisma/client": "^5.22.0",
-    "clsx": "^2.1.0",
     "lucide-react": "^0.370.0",
     "next": "^14.2.35",
     "prisma": "^5.22.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tailwind-merge": "^3.6.0",
     "yet-another-react-lightbox": "^3.32.0"
   },
   "devDependencies": {

@@ -1,4 +1,9 @@
-import type { SiteSettings } from './types'
+import type { SiteSetting } from '@prisma/client'
+
+type SiteSettings = Pick<
+  SiteSetting,
+  'id' | 'businessName' | 'whatsappNumber' | 'whatsappDefaultMessage' | 'heroTitle' | 'heroSubtitle'
+>
 
 const WHATSAPP_BASE_URL = 'https://wa.me'
 
