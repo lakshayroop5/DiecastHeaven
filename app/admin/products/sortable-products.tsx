@@ -23,6 +23,15 @@ export default function SortableProducts({ products: initial }: { products: Prod
 
   // ponytail: sync state when server re-fetches after reorder/refresh
   useEffect(() => { setProducts(initial) }, [initial])
+
+  // one-time reindex: fix legacy products with duplicate sortOrder
+  useEffect(() => {
+    if (localStorage.getItem('products-reindexed')) return
+    fetch('/api/admin/products/reorder', { method: 'PATCH' }).then(() => {
+      localStorage.setItem('products-reindexed', '1')
+      router.refresh()
+    })
+  }, [])
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })

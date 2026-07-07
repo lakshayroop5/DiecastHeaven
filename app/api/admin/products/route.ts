@@ -17,13 +17,15 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { categoryIds, images, ...product } = body
 
-  // ponytail: shift all existing products down by 1, new product gets sortOrder 0 (top)
-  await prisma.$executeRaw`UPDATE products SET sort_order = sort_order + 1`
+  // ponytail: assign unique sortOrder so drag-and-drop works reliably
+  // ponytail: negative sortOrder = top of list, O(1) insert
+  const rows = await prisma.$queryRaw<{ min: number | bigint }[]>`SELECT COALESCE(MIN(sort_order), 0) as min FROM products`
+  const nextSortOrder = Number(rows[0]?.min ?? 0) - 1
 
   const created = await prisma.product.create({
     data: {
       ...product,
-      sortOrder: 0,
+      sortOrder: nextSortOrder,
       categories: categoryIds?.length
         ? { create: categoryIds.map((id: string) => ({ categoryId: id })) }
         : undefined,

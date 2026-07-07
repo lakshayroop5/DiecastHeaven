@@ -39,6 +39,7 @@ export function getFeaturedProducts(limit = 6): Promise<ProductWithRelations[]> 
       where: { status: 'PUBLISHED', featured: true },
       include: DEFAULT_INCLUDE,
       take: limit,
+      orderBy: { sortOrder: 'asc' },
     }) as Promise<ProductWithRelations[]>,
     []
   )
@@ -49,6 +50,7 @@ export function getPublishedProducts(): Promise<ProductWithRelations[]> {
     prisma.product.findMany({
       where: { status: 'PUBLISHED' },
       include: DEFAULT_INCLUDE,
+      orderBy: { sortOrder: 'asc' },
     }) as Promise<ProductWithRelations[]>,
     []
   )
@@ -92,6 +94,7 @@ export function getCatalogProducts({
     prisma.product.findMany({
       where: { AND: conditions },
       include: DEFAULT_INCLUDE,
+      orderBy: { sortOrder: 'asc' },
     }) as Promise<ProductWithRelations[]>,
     []
   )

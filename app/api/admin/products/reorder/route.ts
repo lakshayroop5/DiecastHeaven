@@ -13,3 +13,12 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true })
 }
+
+// one-time reindex: assign sequential sortOrder to all products
+export async function PATCH() {
+  const products = await prisma.product.findMany({ select: { id: true }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }] })
+  await prisma.$transaction(
+    products.map((p, i) => prisma.product.update({ where: { id: p.id }, data: { sortOrder: i } }))
+  )
+  return NextResponse.json({ reindexed: products.length })
+}

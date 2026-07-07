@@ -34,10 +34,20 @@ export default function Header({ whatsappNumber = '' }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [wantSearch, setWantSearch] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const { totalItems } = useCart()
+
+  const handleDropdownEnter = (name: string) => {
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null }
+    setOpenDropdown(name)
+  }
+
+  const handleDropdownLeave = () => {
+    closeTimer.current = setTimeout(() => setOpenDropdown(null), 200)
+  }
 
   useEffect(() => {
     if (wantSearch && mobileMenuOpen && searchInputRef.current) {
@@ -84,8 +94,8 @@ export default function Header({ whatsappNumber = '' }: HeaderProps) {
             <div
               key={item.name}
               className="relative pb-2"
-              onMouseEnter={() => item.children && setOpenDropdown(item.name)}
-              onMouseLeave={() => setOpenDropdown(null)}
+              onMouseEnter={() => item.children && handleDropdownEnter(item.name)}
+              onMouseLeave={() => handleDropdownLeave()}
             >
               <Link
                 href={href}
