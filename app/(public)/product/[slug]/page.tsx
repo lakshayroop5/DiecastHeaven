@@ -68,6 +68,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const categoryIds = product.categories.map((pc) => pc.category.id)
+  const hasDiscount = product.offerPrice != null && product.price != null && product.offerPrice < product.price
+  const discountPct = hasDiscount ? Math.round(((product.price! - product.offerPrice!) / product.price!) * 100) : 0
 
   return (
     <div className="min-h-screen bg-hotwheels-black">
@@ -126,7 +128,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             )}
 
             {/* Price */}
-            <div className="mt-4 sm:mt-6 flex items-baseline gap-3">
+            <div className="mt-4 sm:mt-6 flex items-baseline gap-3 flex-wrap">
               {product.offerPrice != null && (
                 <span className="text-2xl sm:text-3xl font-bold text-hotwheels-yellow">
                   {formatPrice(product.offerPrice)}
@@ -135,12 +137,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
               {product.price != null && (
                 <span
                   className={`text-lg sm:text-xl ${
-                    product.offerPrice != null && product.offerPrice < product.price
+                    hasDiscount
                       ? 'text-gray-500 line-through'
                       : 'text-hotwheels-yellow font-bold'
                   }`}
                 >
                   {formatPrice(product.price)}
+                </span>
+              )}
+              {hasDiscount && (
+                <span className="text-sm font-semibold text-hotwheels-red">
+                  {discountPct}% off
                 </span>
               )}
             </div>

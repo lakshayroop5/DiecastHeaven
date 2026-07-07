@@ -20,6 +20,8 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const mainImage = product.images[0]
   const hasDiscount = product.offerPrice != null && product.price != null && product.offerPrice < product.price
+  const discountPct = hasDiscount ? Math.round(((product.price! - product.offerPrice!) / product.price!) * 100) : 0
+  const isSoldOut = product.status === 'SOLD_OUT'
 
   return (
     <article className="group relative bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black hover:border-hotwheels-red/50 transition-colors animate-fade-in">
@@ -41,7 +43,12 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {hasDiscount && (
             <div className="absolute top-2 right-2 bg-hotwheels-red text-white text-xs font-bold px-2 py-1 rounded">
-              SALE
+              {discountPct}% off
+            </div>
+          )}
+          {isSoldOut && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <span className="text-white font-bold text-sm sm:text-base tracking-wider uppercase bg-black/60 px-3 py-1 rounded">Sold Out</span>
             </div>
           )}
         </figure>
