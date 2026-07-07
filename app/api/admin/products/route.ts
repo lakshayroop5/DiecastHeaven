@@ -17,9 +17,13 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { categoryIds, images, ...product } = body
 
+  // ponytail: shift all existing products down by 1, new product gets sortOrder 0 (top)
+  await prisma.$executeRaw`UPDATE products SET sort_order = sort_order + 1`
+
   const created = await prisma.product.create({
     data: {
       ...product,
+      sortOrder: 0,
       categories: categoryIds?.length
         ? { create: categoryIds.map((id: string) => ({ categoryId: id })) }
         : undefined,

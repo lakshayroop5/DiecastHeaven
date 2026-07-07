@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
@@ -20,6 +20,9 @@ export default function SortableProducts({ products: initial }: { products: Prod
   const [products, setProducts] = useState(initial)
   const [saving, setSaving] = useState(false)
   const router = useRouter()
+
+  // ponytail: sync state when server re-fetches after reorder/refresh
+  useEffect(() => { setProducts(initial) }, [initial])
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
