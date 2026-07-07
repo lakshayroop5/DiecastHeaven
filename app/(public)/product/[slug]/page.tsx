@@ -85,7 +85,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
         <div className="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:items-start">
           {/* Image Gallery */}
-          <ProductImageGallery images={product.images} title={product.title} />
+          <ProductImageGallery images={product.images} title={product.title} isSoldOut={product.status === 'SOLD_OUT'} />
 
           {/* Product Details */}
           <div className="mt-6 sm:mt-10 lg:mt-0 lg:pl-8">

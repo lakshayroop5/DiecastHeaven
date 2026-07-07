@@ -9,9 +9,10 @@ import 'yet-another-react-lightbox/styles.css'
 interface ProductImageGalleryProps {
   images: Array<{ imageUrl: string; altText: string | null }>
   title: string
+  isSoldOut?: boolean
 }
 
-export default function ProductImageGallery({ images, title }: ProductImageGalleryProps) {
+export default function ProductImageGallery({ images, title, isSoldOut }: ProductImageGalleryProps) {
   const [index, setIndex] = useState(-1)
   const mainImage = images[0]
 
@@ -41,6 +42,11 @@ export default function ProductImageGallery({ images, title }: ProductImageGalle
         <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
           Click to zoom
         </div>
+        {isSoldOut && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center pointer-events-none">
+            <span className="text-white font-bold text-base tracking-wider uppercase bg-black/60 px-4 py-1.5 rounded">Sold Out</span>
+          </div>
+        )}
       </button>
 
       {/* Thumbnails - clickable to open lightbox at that image */}

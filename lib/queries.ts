@@ -126,7 +126,7 @@ export const getBrands = cache(
 const getFeaturedProductsRaw = (limit = 6): Promise<ProductWithRelations[]> => {
   return safeQuery(
     prisma.product.findMany({
-      where: { status: 'PUBLISHED', featured: true },
+      where: { status: { in: ['PUBLISHED', 'SOLD_OUT'] }, featured: true },
       include: DEFAULT_INCLUDE,
       take: limit,
       orderBy: { sortOrder: 'asc' },
@@ -149,7 +149,7 @@ export const getFeaturedProducts = (limit = 6) => {
 const getPublishedProductsRaw = (): Promise<ProductWithRelations[]> => {
   return safeQuery(
     prisma.product.findMany({
-      where: { status: 'PUBLISHED' },
+      where: { status: { in: ['PUBLISHED', 'SOLD_OUT'] } },
       include: DEFAULT_INCLUDE,
       orderBy: { sortOrder: 'asc' },
     }) as Promise<ProductWithRelations[]>,
@@ -174,7 +174,7 @@ const getCatalogProductsRaw = ({
   categorySlug?: string
   brandSlug?: string
 }): Promise<ProductWithRelations[]> => {
-  const conditions: any[] = [{ status: 'PUBLISHED' }]
+  const conditions: any[] = [{ status: { in: ['PUBLISHED', 'SOLD_OUT'] } }]
 
   if (search) {
     conditions.push({
@@ -234,7 +234,7 @@ const getCatalogProductSlugsRaw = ({
   categorySlug?: string
   brandSlug?: string
 }): Promise<{ slug: string }[]> => {
-  const conditions: any[] = [{ status: 'PUBLISHED' }]
+  const conditions: any[] = [{ status: { in: ['PUBLISHED', 'SOLD_OUT'] } }]
 
   if (search) {
     conditions.push({
@@ -288,7 +288,7 @@ export const getCatalogProductSlugs = (args: {
 const getFeaturedProductSlugsRaw = (limit = 6): Promise<{ slug: string }[]> => {
   return safeQuery(
     prisma.product.findMany({
-      where: { status: 'PUBLISHED', featured: true },
+      where: { status: { in: ['PUBLISHED', 'SOLD_OUT'] }, featured: true },
       select: { slug: true },
       take: limit,
       orderBy: { sortOrder: 'asc' },
@@ -338,7 +338,7 @@ const getRelatedProductsRaw = (
   return safeQuery(
     prisma.product.findMany({
       where: {
-        status: 'PUBLISHED',
+        status: { in: ['PUBLISHED', 'SOLD_OUT'] },
         id: { not: excludeProductId },
         categories: { some: { categoryId: { in: categoryIds } } },
       },

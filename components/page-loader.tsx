@@ -163,7 +163,14 @@ export default function PageLoader() {
   // Listen to navigation events
   useEffect(() => {
     const onStart = () => handleStart()
-    const onEnd = () => finish()
+    const onEnd = () => {
+      // ponytail: Wait 300ms to let the Next.js router commit the transition and update the URL on slower network environments (like Vercel).
+      // ponytail: If the URL changes, the routeKey effect handles the dismissal instantly.
+      // ponytail: If the URL does not change, this cleans up and closes the loader after the delay.
+      setTimeout(() => {
+        finish()
+      }, 300)
+    }
 
     window.addEventListener('nextjs-navigation-start', onStart)
     window.addEventListener('nextjs-navigation-end', onEnd)

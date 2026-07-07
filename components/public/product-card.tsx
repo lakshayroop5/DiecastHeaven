@@ -15,9 +15,10 @@ interface ProductWithImages extends Product {
 
 interface ProductCardProps {
   product: ProductWithImages
+  priority?: boolean
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const mainImage = product.images[0]
   const hasDiscount = product.offerPrice != null && product.price != null && product.offerPrice < product.price
   const discountPct = hasDiscount ? Math.round(((product.price! - product.offerPrice!) / product.price!) * 100) : 0
@@ -34,6 +35,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover transition-transform group-hover:scale-105"
+              priority={priority}
             />
           ) : (
             <div className="w-full h-full bg-hotwheels-black flex items-center justify-center">
