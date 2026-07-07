@@ -63,7 +63,7 @@ export default function ProductForm({ product }: Props) {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 1024 * 1024) { alert('Image must be under 1MB'); return }
+    if (file.size > 10 * 1024 * 1024) { alert('Image must be under 10MB'); return }
 
     setUploading(true)
     const formData = new FormData()

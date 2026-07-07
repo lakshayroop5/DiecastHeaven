@@ -48,13 +48,16 @@ function RaceCar({ className }: { className?: string }) {
 export default function PageLoader() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const routeKey = pathname + '?' + searchParams.toString()
+  const searchStr = searchParams.toString()
+  const routeKey = pathname + (searchStr ? '?' + searchStr : '')
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [visible, setVisible] = useState(false)
   const pathAtLoadRef = useRef<string | null>(null)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  
+  const showTimerRef = useRef<NodeJS.Timeout | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const stopProgress = () => {
     if (intervalRef.current) {
@@ -74,11 +77,102 @@ export default function PageLoader() {
   }
 
   const finish = () => {
+    if (showTimerRef.current) {
+      clearTimeout(showTimerRef.current)
+      showTimerRef.current = null
+    }
     stopProgress()
     setProgress(100)
-    setVisible(false)
-    setLoading(false)
+
+    if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current)
+    fadeTimeoutRef.current = setTimeout(() => {
+      setVisible(false)
+      setLoading(false)
+    }, 150)
   }
+
+  const handleStart = () => {
+    setLoading(true)
+    pathAtLoadRef.current = window.location.pathname + window.location.search
+
+    if (showTimerRef.current) clearTimeout(showTimerRef.current)
+    if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current)
+
+    showTimerRef.current = setTimeout(() => {
+      setVisible(true)
+      setProgress(0)
+      startProgress()
+    }, 150)
+  }
+
+  // Intercept fetch API for RSC navigations
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const originalFetch = window.fetch
+
+    window.fetch = async function (input, init) {
+      let headers: Record<string, string> = {}
+      if (init?.headers) {
+        if (init.headers instanceof Headers) {
+          init.headers.forEach((value, key) => {
+            headers[key.toLowerCase()] = value
+          })
+        } else if (Array.isArray(init.headers)) {
+          init.headers.forEach(([key, value]) => {
+            headers[key.toLowerCase()] = value
+          })
+        } else {
+          Object.entries(init.headers).forEach(([key, value]) => {
+            headers[key.toLowerCase()] = String(value)
+          })
+        }
+      }
+
+      const urlStr = typeof input === 'string'
+        ? input
+        : input instanceof URL
+        ? input.href
+        : input && typeof input === 'object' && 'url' in input
+        ? (input as any).url
+        : ''
+
+      const isRsc = headers['rsc'] === '1' || urlStr.includes('_rsc=')
+      const isPrefetch = headers['next-router-prefetch'] === '1' || headers['purpose'] === 'prefetch'
+      const isNav = isRsc && !isPrefetch
+
+      if (isNav) {
+        window.dispatchEvent(new Event('nextjs-navigation-start'))
+      }
+
+      try {
+        const response = await originalFetch(input, init)
+        return response
+      } finally {
+        if (isNav) {
+          window.dispatchEvent(new Event('nextjs-navigation-end'))
+        }
+      }
+    }
+
+    return () => {
+      window.fetch = originalFetch
+    }
+  }, [])
+
+  // Listen to navigation events
+  useEffect(() => {
+    const onStart = () => handleStart()
+    const onEnd = () => finish()
+
+    window.addEventListener('nextjs-navigation-start', onStart)
+    window.addEventListener('nextjs-navigation-end', onEnd)
+
+    return () => {
+      window.removeEventListener('nextjs-navigation-start', onStart)
+      window.removeEventListener('nextjs-navigation-end', onEnd)
+    }
+  }, [])
 
   // Intercept link clicks
   useEffect(() => {
@@ -87,60 +181,63 @@ export default function PageLoader() {
       const link = (e.target as HTMLElement).closest('a')
       if (!link) return
       const href = link.getAttribute('href')
-      if (!href || href.startsWith('#') || href.startsWith('javascript') || href.startsWith('mailto') || href.startsWith('tel')) return
+      if (!href) return
+
+      // Skip non-navigation protocols
+      if (
+        href.startsWith('#') ||
+        href.startsWith('javascript:') ||
+        href.startsWith('mailto:') ||
+        href.startsWith('tel:')
+      ) return
+
       if (link.target === '_blank') return
-      // skip if same full URL
-      if (href === window.location.pathname + window.location.search) return
-      pathAtLoadRef.current = window.location.pathname + window.location.search
-      setProgress(0)
-      setVisible(true)
-      setLoading(true)
-      startProgress()
+
+      try {
+        const targetUrl = new URL(href, window.location.href)
+        
+        // Skip external links
+        if (targetUrl.origin !== window.location.origin) return
+
+        // Skip if same pathname and search params (hash changes / anchor links)
+        if (
+          targetUrl.pathname === window.location.pathname &&
+          targetUrl.search === window.location.search
+        ) return
+
+        handleStart()
+      } catch (err) {
+        // Safe fallback
+      }
     }
     document.addEventListener('click', handler, true)
     return () => document.removeEventListener('click', handler, true)
-  }, [pathname])
+  }, [])
 
-  // Intercept history API for back/forward
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const origPush = window.history.pushState.bind(window.history)
-    const origReplace = window.history.replaceState.bind(window.history)
-
-    const intercept = () => {
-      pathAtLoadRef.current = window.location.pathname + window.location.search
-      setProgress(0)
-      setVisible(true)
-      setLoading(true)
-      startProgress()
-    }
-
-    window.history.pushState = (...args) => { intercept(); return origPush(...args) }
-    window.history.replaceState = (...args) => { intercept(); return origReplace(...args) }
-
-    return () => {
-      window.history.pushState = origPush
-      window.history.replaceState = origReplace
-    }
-  }, [pathname])
-
-  // Detect navigation complete via route key change (pathname + searchParams)
+  // Detect navigation complete via route key change (fallback)
   useEffect(() => {
     if (!loading || pathAtLoadRef.current === null) return
 
     if (routeKey !== pathAtLoadRef.current) {
       finish()
     }
-
-    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [routeKey, loading])
 
-  // 8s fallback
+  // 10s safety fallback to prevent stuck loader
   useEffect(() => {
     if (!loading) return
-    const t = setTimeout(finish, 8000)
+    const t = setTimeout(finish, 10000)
     return () => clearTimeout(t)
   }, [loading])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (showTimerRef.current) clearTimeout(showTimerRef.current)
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current)
+    }
+  }, [])
 
   if (!visible) return null
 
