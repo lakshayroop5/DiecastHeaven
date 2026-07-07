@@ -83,7 +83,7 @@ export default function Header({ whatsappNumber = '' }: HeaderProps) {
             return (
             <div
               key={item.name}
-              className="relative"
+              className="relative pb-2"
               onMouseEnter={() => item.children && setOpenDropdown(item.name)}
               onMouseLeave={() => setOpenDropdown(null)}
             >
