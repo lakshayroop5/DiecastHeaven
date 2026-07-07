@@ -1,19 +1,31 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import Hero from '@/components/public/hero'
-import ProductCard from '@/components/public/product-card'
+import FeaturedProducts from '@/components/public/featured-products'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
-import {
-  getFeaturedProducts,
-  getCategories,
-  getBrands,
-  getSiteSettings,
-} from '@/lib/queries'
+import { getCategories, getBrands, getSiteSettings } from '@/lib/queries'
 
 export const dynamic = 'force-dynamic'
 
+function FeaturedSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black">
+          <div className="aspect-square bg-hotwheels-black animate-pulse" />
+          <div className="p-4 space-y-3">
+            <div className="h-3 bg-hotwheels-black rounded w-1/3 animate-pulse" />
+            <div className="h-5 bg-hotwheels-black rounded w-2/3 animate-pulse" />
+            <div className="h-4 bg-hotwheels-black rounded w-1/4 animate-pulse" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default async function HomePage() {
-  const [featuredProducts, categories, brands, settings] = await Promise.all([
-    getFeaturedProducts(6),
+  const [categories, brands, settings] = await Promise.all([
     getCategories(),
     getBrands(),
     getSiteSettings(),
@@ -46,17 +58,9 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          {featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-gray-400 py-8">
-              No featured products available yet.
-            </p>
-          )}
+          <Suspense fallback={<FeaturedSkeleton />}>
+            <FeaturedProducts />
+          </Suspense>
         </div>
       </section>
 

@@ -100,6 +100,62 @@ export function getCatalogProducts({
   )
 }
 
+export function getCatalogProductSlugs({
+  search,
+  categorySlug,
+  brandSlug,
+}: {
+  search?: string
+  categorySlug?: string
+  brandSlug?: string
+}): Promise<{ slug: string }[]> {
+  const conditions: any[] = [{ status: 'PUBLISHED' }]
+
+  if (search) {
+    conditions.push({
+      OR: [
+        { title: { contains: search } },
+        { shortDesc: { contains: search } },
+        { brand: { name: { contains: search } } },
+        { categories: { some: { category: { name: { contains: search } } } } },
+      ],
+    })
+  }
+
+  if (categorySlug) {
+    conditions.push({
+      categories: { some: { category: { slug: categorySlug } } },
+    })
+  }
+
+  if (brandSlug) {
+    conditions.push({
+      brand: { slug: brandSlug },
+    })
+  }
+
+  return safeQuery(
+    prisma.product.findMany({
+      where: { AND: conditions },
+      select: { slug: true },
+      orderBy: { sortOrder: 'asc' },
+    }),
+    []
+  )
+}
+
+export function getFeaturedProductSlugs(limit = 6): Promise<{ slug: string }[]> {
+  return safeQuery(
+    prisma.product.findMany({
+      where: { status: 'PUBLISHED', featured: true },
+      select: { slug: true },
+      take: limit,
+      orderBy: { sortOrder: 'asc' },
+    }),
+    []
+  )
+}
+
 export function getProductBySlug(slug: string): Promise<ProductWithRelations | null> {
   return safeQuery(
     prisma.product.findUnique({

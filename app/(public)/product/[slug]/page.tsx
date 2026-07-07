@@ -1,10 +1,11 @@
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { getProductBySlug, getRelatedProducts } from '@/lib/queries'
+import { getProductBySlug } from '@/lib/queries'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
 import AddToCartButton from '@/components/public/add-to-cart-button'
-import ProductCard from '@/components/public/product-card'
+import RelatedProducts from '@/components/public/related-products'
 import ProductImageGallery from '@/components/public/product-image-gallery'
 import { Badge } from '@/components/ui/badge'
 import { formatPrice } from '@/lib/utils'
@@ -38,6 +39,26 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export const dynamic = 'force-dynamic'
 
+function RelatedSkeleton() {
+  return (
+    <div className="mt-10 sm:mt-16">
+      <div className="h-7 bg-hotwheels-gray rounded w-48 animate-pulse mb-4 sm:mb-6" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black">
+            <div className="aspect-square bg-hotwheels-black animate-pulse" />
+            <div className="p-4 space-y-3">
+              <div className="h-3 bg-hotwheels-black rounded w-1/3 animate-pulse" />
+              <div className="h-5 bg-hotwheels-black rounded w-2/3 animate-pulse" />
+              <div className="h-4 bg-hotwheels-black rounded w-1/4 animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params
   const product = await getProductBySlug(slug)
@@ -47,7 +68,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const categoryIds = product.categories.map((pc) => pc.category.id)
-  const relatedProducts = await getRelatedProducts(categoryIds, product.id, 4)
 
   return (
     <div className="min-h-screen bg-hotwheels-black">
@@ -155,19 +175,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
 
-        {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div className="mt-10 sm:mt-16">
-            <h2 className="text-xl sm:text-2xl font-bold text-hotwheels-white mb-4 sm:mb-6">
-              Related Products
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-              {relatedProducts.map((rp) => (
-                <ProductCard key={rp.id} product={rp} />
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Related Products — streams via Suspense */}
+        <Suspense fallback={<RelatedSkeleton />}>
+          <RelatedProducts categoryIds={categoryIds} excludeProductId={product.id} />
+        </Suspense>
       </div>
     </div>
   )

@@ -22,7 +22,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const hasDiscount = product.offerPrice != null && product.price != null && product.offerPrice < product.price
 
   return (
-    <article className="group relative bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black hover:border-hotwheels-red/50 transition-colors">
+    <article className="group relative bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black hover:border-hotwheels-red/50 transition-colors animate-fade-in">
       <Link href={`/product/${product.slug}`}>
         <figure className="aspect-square relative bg-hotwheels-black overflow-hidden">
           {mainImage ? (
