@@ -33,3 +33,8 @@
 .animate-fade-in {
   animation: fade-in 0.3s ease-out both;
 }
+
+@keyframes exhaust-pulse {
+  from { opacity: 0.2; }
+  to { opacity: 0.5; }
+}
