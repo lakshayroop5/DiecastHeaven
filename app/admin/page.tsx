@@ -1,9 +1,11 @@
 import prisma from '@/lib/prisma'
 import { getCategories, getBrands } from '@/lib/queries'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminDashboard() {
   const [productCount, categories, brands] = await Promise.all([
-    prisma.product.count({ where: { status: 'PUBLISHED' } }),
+    prisma.product.count(),
     getCategories(),
     getBrands(),
   ])

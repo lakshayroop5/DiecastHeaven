@@ -46,15 +46,23 @@ export default function WhatsAppCTA({
     }
   }
 
-  const buttonText = productName ? 'Inquire on WhatsApp' : 'Contact via WhatsApp'
-
   return (
     <button
       onClick={handleClick}
-      className={`inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors ${VARIANT_STYLES[variant]}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition-colors ${VARIANT_STYLES[variant]}`}
     >
       <MessageCircle className="h-5 w-5" />
-      {buttonText}
+      {productName ? (
+        <>
+          <span className="sm:hidden">Inquire</span>
+          <span className="hidden sm:inline">Inquire on WhatsApp</span>
+        </>
+      ) : (
+        <>
+          <span className="sm:hidden">Contact</span>
+          <span className="hidden sm:inline">Contact via WhatsApp</span>
+        </>
+      )}
     </button>
   )
 }

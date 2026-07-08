@@ -25,7 +25,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const isSoldOut = product.status === 'SOLD_OUT'
 
   return (
-    <article className="group relative bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black hover:border-hotwheels-red/50 transition-colors animate-fade-in">
+    <article className="group relative flex flex-col bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black hover:border-hotwheels-red/50 transition-colors animate-fade-in">
       <Link href={`/product/${product.slug}`}>
         <figure className="aspect-square relative bg-hotwheels-black overflow-hidden">
           {mainImage ? (
@@ -56,7 +56,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         </figure>
       </Link>
 
-      <div className="p-4">
+      <div className="p-4 flex-1 flex flex-col">
         {/* Brand */}
         {product.brand && (
           <p className="text-xs font-medium text-hotwheels-yellow uppercase tracking-wide mb-1">
@@ -118,7 +118,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           </p>
         )}
 
-        <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <div className="mt-auto pt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <AddToCartButton product={{ id: product.id, slug: product.slug, title: product.title, price: product.price, offerPrice: product.offerPrice }} imageUrl={mainImage?.imageUrl} variant="compact" />
           <WhatsAppCTA productName={product.title} variant="small" />
         </div>
