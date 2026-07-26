@@ -45,7 +45,7 @@ interface Props {
     id: string; title: string; slug: string; description: string | null
     shortDesc: string | null; scale: string | null; price: number | null
     offerPrice: number | null; status: string; featured: boolean
-    stock: number; sortOrder: number
+    stock: number; sortOrder: number; orderType: string; depositAmount: number | null
     brandId: string | null; categories: Array<{ categoryId: string }>
     images: ProductImage[]
   }
@@ -70,6 +70,8 @@ export default function ProductForm({ product }: Props) {
     status: product?.status || 'DRAFT',
     featured: product?.featured || false,
     stock: product?.stock?.toString() || '0',
+    orderType: product?.orderType || 'RTD',
+    depositAmount: product?.depositAmount?.toString() || '',
     brandId: product?.brandId || '',
     categoryIds: product?.categories.map((c) => c.categoryId) || [],
     imageUrl: product?.images[0]?.imageUrl || '',
@@ -124,6 +126,8 @@ export default function ProductForm({ product }: Props) {
         price: form.price ? parseFloat(form.price) : null,
         offerPrice: form.offerPrice ? parseFloat(form.offerPrice) : null,
         status: form.status,
+        orderType: form.orderType,
+        depositAmount: form.orderType === 'PRE_ORDER' && form.depositAmount ? parseFloat(form.depositAmount) : null,
         featured: form.featured,
         stock: parseInt(form.stock) || 0,
         brandId: form.brandId || null,
@@ -208,7 +212,7 @@ export default function ProductForm({ product }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm text-gray-400 mb-1">Brand</label>
           <select value={form.brandId} onChange={(e) => set('brandId', e.target.value)} className="w-full px-3 py-2 rounded bg-hotwheels-black text-white border border-hotwheels-gray text-sm">
@@ -224,7 +228,23 @@ export default function ProductForm({ product }: Props) {
             <option value="SOLD_OUT">Sold Out</option>
           </select>
         </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Order Type</label>
+          <select value={form.orderType} onChange={(e) => set('orderType', e.target.value)} className="w-full px-3 py-2 rounded bg-hotwheels-black text-white border border-hotwheels-gray text-sm">
+            <option value="RTD">RTD (Ready to Dispatch)</option>
+            <option value="PRE_ORDER">Pre-Order</option>
+          </select>
+        </div>
       </div>
+
+      {form.orderType === 'PRE_ORDER' && (
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Deposit Amount</label>
+          <input type="number" value={form.depositAmount} onChange={(v) => set('depositAmount', v.target.value)}
+            className="w-full px-3 py-2 rounded bg-hotwheels-black text-white border border-hotwheels-gray focus:border-hotwheels-red outline-none text-sm"
+            placeholder="Amount customer pays upfront" />
+        </div>
+      )}
 
       <div>
         <label className="block text-sm text-gray-400 mb-1">Categories</label>
@@ -287,7 +307,7 @@ export default function ProductForm({ product }: Props) {
                   <RaceCar className="w-28 h-12 drop-shadow-[0_0_12px_rgba(227,41,46,0.5)]" />
                 </div>
                 <p className="relative z-10 text-sm font-bold tracking-widest text-hotwheels-red uppercase">
-                  Diecast Heaven
+                  Diecast Heaven Udaipur
                 </p>
                 <p className="relative z-10 text-[11px] tracking-[0.2em] text-gray-400 uppercase">
                   Uploading<span style={{ animation: 'dots 1.4s steps(4) infinite' }}>...</span>

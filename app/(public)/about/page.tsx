@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: `About | ${process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven'}`,
+    title: `About | ${process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven Udaipur'}`,
     description: 'Learn about our Hot Wheels collection and expertise',
   }
 }
@@ -20,7 +20,7 @@ export default async function AboutPage() {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-hotwheels-white mb-4">
-            About {settings?.businessName || process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven'}
+            About {settings?.businessName || process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven Udaipur'}
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Your trusted source for premium Hot Wheels diecast collector cars

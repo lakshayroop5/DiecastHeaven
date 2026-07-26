@@ -20,7 +20,7 @@ export default async function Footer() {
           {/* Brand */}
           <div>
             <Link href="/" className="text-hotwheels-red text-2xl font-extrabold">
-              DIECAST HEAVEN
+              DIECAST HEAVEN UDAIPUR
             </Link>
             <p className="mt-2 text-sm text-gray-300">
               India&apos;s premium diecast destination. Genuine collector cars from Hot Wheels, Majorette, Matchbox, Bburago, Tomica, and more.
@@ -65,7 +65,7 @@ export default async function Footer() {
 
         <div className="mt-8 border-t border-hotwheels-black pt-8">
           <p className="text-center text-xs text-gray-400">
-            &copy; {new Date().getFullYear()} {settings?.businessName || process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven'}. All rights reserved.
+            &copy; {new Date().getFullYear()} {settings?.businessName || process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven Udaipur'}. All rights reserved.
           </p>
         </div>
       </div>

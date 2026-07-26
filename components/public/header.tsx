@@ -16,12 +16,12 @@ const navigation = [
     children: [
       { name: 'All Products', href: '/catalog' },
       { name: 'New Arrivals', href: '/catalog?sort=newest' },
-      { name: 'Collectibles', href: '/catalog?view=brands' },
+      { name: 'Pre Orders', href: '/catalog?orderType=PRE_ORDER' },
     ],
   },
   { name: 'Brands', href: '/catalog?view=brands' },
   { name: 'New Arrivals', href: '/catalog' },
-  { name: 'Collectibles', href: '/catalog?category=sets' },
+  { name: 'Pre Orders', href: '/catalog?orderType=PRE_ORDER' },
   { name: 'Contact', href: '#contact' },
 ]
 

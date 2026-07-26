@@ -259,10 +259,7 @@ export default function PageLoader() {
 
         {/* brand */}
         <p className="relative z-10 text-sm font-bold tracking-widest text-hotwheels-red uppercase">
-          Diecast Heaven
-        </p>
-        <p className="relative z-10 text-[10px] tracking-[0.15em] text-gray-500 -mt-4 uppercase">
-          Udaipur
+          Diecast Heaven Udaipur
         </p>
 
         {/* progress bar */}

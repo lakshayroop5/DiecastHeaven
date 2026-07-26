@@ -15,6 +15,8 @@ export interface CartItem {
   title: string
   price: number | null
   offerPrice: number | null
+  depositAmount: number | null
+  orderType: string
   image: string
   quantity: number
 }
@@ -114,7 +116,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const value = useMemo<CartContextValue>(() => {
     const totalItems = state.items.reduce((sum, i) => sum + i.quantity, 0)
     const subtotal = state.items.reduce((sum, i) => {
-      const unit = i.offerPrice ?? i.price ?? 0
+      const unit = i.orderType === 'PRE_ORDER' && i.depositAmount != null
+        ? i.depositAmount
+        : i.offerPrice ?? i.price ?? 0
       return sum + unit * i.quantity
     }, 0)
 

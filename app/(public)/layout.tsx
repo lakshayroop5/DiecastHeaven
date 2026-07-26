@@ -6,7 +6,7 @@ import Footer from '@/components/public/footer'
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings()
   return {
-    title: settings?.businessName || process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven',
+    title: settings?.businessName || process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven Udaipur',
     description: settings?.heroSubtitle || process.env.DEFAULT_HERO_SUBTITLE || "India's Premium Diecast Destination",
   }
 }

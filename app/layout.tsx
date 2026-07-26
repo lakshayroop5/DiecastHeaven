@@ -5,7 +5,7 @@ import { CartProvider } from '@/lib/cart-context'
 import PageLoader from '@/components/page-loader'
 
 export const metadata: Metadata = {
-  title: process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven',
+  title: process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven Udaipur',
   description: process.env.DEFAULT_HERO_SUBTITLE || "India's Premium Diecast Destination",
 }
 

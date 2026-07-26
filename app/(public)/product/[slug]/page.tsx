@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   return {
-    title: `${product.title} | ${process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven'}`,
+    title: `${product.title} | ${process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven Udaipur'}`,
     description:
       product.shortDesc ||
       product.description?.substring(0, 160) ||
@@ -105,6 +105,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   {category.name}
                 </Badge>
               ))}
+              {product.orderType === 'PRE_ORDER' && (
+                <Badge variant="outline">Pre-Order</Badge>
+              )}
               {product.status === 'SOLD_OUT' && (
                 <Badge variant="destructive">Sold Out</Badge>
               )}
@@ -164,13 +167,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </div>
             )}
 
+            {/* Pre-Order Deposit Note */}
+            {product.orderType === 'PRE_ORDER' && product.depositAmount != null && (
+              <div className="mt-4 p-3 rounded bg-hotwheels-yellow/10 border border-hotwheels-yellow/30 text-sm text-hotwheels-yellow">
+                Pay {formatPrice(product.depositAmount)} deposit now — balance on delivery.
+              </div>
+            )}
+
             {/* CTA */}
             <div className="mt-6 sm:mt-8 flex gap-3 sm:gap-4 flex-wrap">
-              <AddToCartButton
-                product={product}
-                imageUrl={product.images[0]?.imageUrl}
-                variant="full"
-              />
+              {product.status !== 'SOLD_OUT' && (
+                <AddToCartButton
+                  product={product}
+                  imageUrl={product.images[0]?.imageUrl}
+                  variant="full"
+                />
+              )}
               <WhatsAppCTA productName={product.title} variant="primary" />
               <Link
                 href="/catalog"

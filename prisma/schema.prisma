@@ -41,10 +41,12 @@ model Product {
   scale       String?
   price       Float?
   offerPrice  Float?            @map("offer_price")
-  status      String            @default("DRAFT")
-  featured    Boolean           @default(false)
-  sortOrder   Int               @default(0) @map("sort_order")
-  stock       Int               @default(0)
+  status        String            @default("DRAFT")
+  featured      Boolean           @default(false)
+  sortOrder     Int               @default(0) @map("sort_order")
+  stock         Int               @default(0)
+  orderType     String            @default("RTD") @map("order_type")
+  depositAmount Float?            @map("deposit_amount")
   brandId     String?           @map("brand_id")
   brand       Brand?            @relation(fields: [brandId], references: [id])
   categories  ProductCategory[]

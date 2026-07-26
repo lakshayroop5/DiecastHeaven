@@ -23,12 +23,15 @@ export default function CartPage() {
   const handleCheckout = () => {
     setCheckingOut(true)
     const lines = items.map(
-      (i) =>
-        `- ${i.title} (x${i.quantity}) - ${formatPrice(
-          (i.offerPrice ?? i.price ?? 0) * i.quantity
-        )}`
+      (i) => {
+        const unit = i.orderType === 'PRE_ORDER' && i.depositAmount != null
+          ? i.depositAmount
+          : i.offerPrice ?? i.price ?? 0
+        const tag = i.orderType === 'PRE_ORDER' ? ' [Pre-Order Deposit]' : ''
+        return `- ${i.title}${tag} (x${i.quantity}) - ${formatPrice(unit * i.quantity)}`
+      }
     )
-    const message = `Hi ${businessName || 'Diecast Heaven'}! I'd like to order:\n\n${lines.join(
+    const message = `Hi ${businessName || 'Diecast Heaven Udaipur'}! I'd like to order:\n\n${lines.join(
       '\n'
     )}\n\nTotal: ${formatPrice(subtotal)}\n\nPlease confirm availability and payment details.`
     const link = buildWhatsAppLink(whatsappNumber, message)
@@ -39,22 +42,30 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-hotwheels-black flex items-center justify-center">
-        <div className="text-center px-4">
-          <div className="rounded-full bg-hotwheels-gray p-6 mb-4 inline-flex">
-            <ShoppingBag className="h-12 w-12 text-hotwheels-red" />
+        <div className="text-center px-4 max-w-md">
+          <div className="rounded-full bg-hotwheels-gray border border-hotwheels-black p-8 mb-6 inline-flex">
+            <ShoppingBag className="h-14 w-14 text-hotwheels-red" />
           </div>
-          <h1 className="text-2xl font-bold text-hotwheels-white mb-2">
+          <h1 className="text-2xl font-bold text-hotwheels-white mb-3">
             Your cart is empty
           </h1>
-          <p className="text-gray-400 mb-8 max-w-sm mx-auto">
-            Looks like you haven't added any diecast cars yet. Browse our collection to find your next gem.
+          <p className="text-gray-400 mb-8">
+            Looks like you haven&apos;t added any diecast cars yet. Browse our collection to find your next gem.
           </p>
-          <Link
-            href="/catalog"
-            className="inline-block rounded-md bg-hotwheels-red px-6 py-3 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
-          >
-            Browse Catalog
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/catalog"
+              className="inline-flex items-center justify-center rounded-md bg-hotwheels-red px-6 py-3 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+            >
+              Browse Catalog
+            </Link>
+            <Link
+              href="/catalog?sort=newest"
+              className="inline-flex items-center justify-center rounded-md border border-hotwheels-gray px-6 py-3 text-sm font-semibold text-hotwheels-white hover:border-hotwheels-red/50 transition-colors"
+            >
+              New Arrivals
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -90,14 +101,21 @@ export default function CartPage() {
 
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-3">
             {items.map((item) => {
-              const unit = item.offerPrice ?? item.price ?? 0
+              const isItemPreOrder = item.orderType === 'PRE_ORDER'
+              const unit = isItemPreOrder && item.depositAmount != null
+                ? item.depositAmount
+                : item.offerPrice ?? item.price ?? 0
               const lineTotal = unit * item.quantity
               return (
                 <div
                   key={item.id}
-                  className="flex gap-4 bg-hotwheels-gray rounded-lg p-4 border border-hotwheels-black"
+                  className={`flex gap-4 bg-hotwheels-gray rounded-lg p-4 border ${
+                    isItemPreOrder
+                      ? 'border-hotwheels-yellow/30'
+                      : 'border-hotwheels-black'
+                  }`}
                 >
                   {/* Image */}
                   <Link
@@ -115,18 +133,37 @@ export default function CartPage() {
                         <ShoppingBag className="h-6 w-6 text-gray-600" />
                       </div>
                     )}
+                    {isItemPreOrder && (
+                      <span className="absolute top-1 left-1 bg-hotwheels-yellow text-hotwheels-black text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        Pre-Order
+                      </span>
+                    )}
                   </Link>
 
                   {/* Details */}
                   <div className="flex-1 min-w-0">
                     <Link href={`/product/${item.slug}`} className="block">
-                      <h3 className="text-base font-semibold text-hotwheels-white hover:text-hotwheels-yellow transition-colors">
+                      <h3 className="text-base font-semibold text-hotwheels-white hover:text-hotwheels-yellow transition-colors line-clamp-1">
                         {item.title}
                       </h3>
                     </Link>
-                    <p className="text-sm text-hotwheels-yellow font-medium mt-1">
-                      {formatPrice(unit)}
-                    </p>
+
+                    {isItemPreOrder && item.depositAmount != null ? (
+                      <div className="mt-1.5 inline-flex items-center gap-1.5 text-sm">
+                        <span className="text-hotwheels-yellow font-semibold">
+                          Deposit: {formatPrice(item.depositAmount)}
+                        </span>
+                        {(item.offerPrice ?? item.price) != null && (
+                          <span className="text-gray-500">
+                            of {formatPrice(item.offerPrice ?? item.price ?? 0)} full
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-hotwheels-yellow font-medium mt-1">
+                        {formatPrice(unit)}
+                      </p>
+                    )}
 
                     {/* Quantity Controls */}
                     <div className="flex items-center gap-3 mt-3">
@@ -165,6 +202,11 @@ export default function CartPage() {
                     <p className="text-lg font-bold text-hotwheels-white">
                       {formatPrice(lineTotal)}
                     </p>
+                    {isItemPreOrder && item.quantity > 1 && (
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        {item.quantity}x {formatPrice(unit)} deposit
+                      </p>
+                    )}
                   </div>
                 </div>
               )
@@ -189,6 +231,14 @@ export default function CartPage() {
                 </div>
               </div>
 
+              {items.some((i) => i.orderType === 'PRE_ORDER') && (
+                <div className="mt-4 rounded-md bg-hotwheels-yellow/10 border border-hotwheels-yellow/20 px-3 py-2.5">
+                  <p className="text-xs text-hotwheels-yellow font-medium text-center">
+                    Pre-order items show deposit amounts. Balance due on delivery.
+                  </p>
+                </div>
+              )}
+
               <div className="mt-4 pt-4 border-t border-hotwheels-black">
                 <div className="flex justify-between items-baseline">
                   <span className="text-base font-semibold text-hotwheels-white">
@@ -198,6 +248,11 @@ export default function CartPage() {
                     {formatPrice(subtotal)}
                   </span>
                 </div>
+                {items.some((i) => i.orderType === 'PRE_ORDER') && (
+                  <p className="text-[11px] text-gray-500 text-right mt-0.5">
+                    deposit total — balance on delivery
+                  </p>
+                )}
               </div>
 
               <button

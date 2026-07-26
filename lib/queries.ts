@@ -123,27 +123,23 @@ export const getBrands = cache(
 )
 
 // 4. Featured Products
-const getFeaturedProductsRaw = (limit = 6): Promise<ProductWithRelations[]> => {
+const getFeaturedProductsRaw = (): Promise<ProductWithRelations[]> => {
   return safeQuery(
     prisma.product.findMany({
       where: { status: { in: ['PUBLISHED', 'SOLD_OUT'] }, featured: true },
       include: DEFAULT_INCLUDE,
-      take: limit,
       orderBy: { sortOrder: 'asc' },
     }) as Promise<ProductWithRelations[]>,
     []
   )
 }
-export const getFeaturedProducts = (limit = 6) => {
-  const getCached = cache(
-    safeUnstableCache(
-      async (l: number) => getFeaturedProductsRaw(l),
-      ['featured-products'],
-      { tags: ['products', 'featured-products'] }
-    )
+export const getFeaturedProducts = cache(
+  safeUnstableCache(
+    getFeaturedProductsRaw,
+    ['featured-products'],
+    { tags: ['products', 'featured-products'] }
   )
-  return getCached(limit)
-}
+)
 
 // 5. Published Products
 const getPublishedProductsRaw = (): Promise<ProductWithRelations[]> => {
@@ -164,16 +160,22 @@ export const getPublishedProducts = cache(
   )
 )
 
-// 6. Catalog Products
+// 6. Catalog Products (with pagination)
+const PAGE_SIZE = 12
+
 const getCatalogProductsRaw = ({
   search,
   categorySlug,
   brandSlug,
+  orderType,
+  page = 1,
 }: {
   search?: string
   categorySlug?: string
   brandSlug?: string
-}): Promise<ProductWithRelations[]> => {
+  orderType?: string
+  page?: number
+}): Promise<{ products: ProductWithRelations[]; total: number; page: number; totalPages: number }> => {
   const conditions: any[] = [{ status: { in: ['PUBLISHED', 'SOLD_OUT'] } }]
 
   if (search) {
@@ -199,29 +201,45 @@ const getCatalogProductsRaw = ({
     })
   }
 
+  if (orderType) {
+    conditions.push({ orderType })
+  }
+
+  const where = { AND: conditions }
+
   return safeQuery(
-    prisma.product.findMany({
-      where: { AND: conditions },
-      include: DEFAULT_INCLUDE,
-      orderBy: { sortOrder: 'asc' },
-    }) as Promise<ProductWithRelations[]>,
-    []
+    (async () => {
+      const [products, total] = await Promise.all([
+        prisma.product.findMany({
+          where,
+          include: DEFAULT_INCLUDE,
+          orderBy: { sortOrder: 'asc' },
+          skip: (page - 1) * PAGE_SIZE,
+          take: PAGE_SIZE,
+        }) as Promise<ProductWithRelations[]>,
+        prisma.product.count({ where }),
+      ])
+      return { products, total, page, totalPages: Math.ceil(total / PAGE_SIZE) }
+    })(),
+    { products: [], total: 0, page: 1, totalPages: 0 }
   )
 }
 export const getCatalogProducts = (args: {
   search?: string
   categorySlug?: string
   brandSlug?: string
+  orderType?: string
+  page?: number
 }) => {
   const getCached = cache(
     safeUnstableCache(
-      async (s?: string, c?: string, b?: string) =>
-        getCatalogProductsRaw({ search: s, categorySlug: c, brandSlug: b }),
+      async (s?: string, c?: string, b?: string, o?: string, p?: number) =>
+        getCatalogProductsRaw({ search: s, categorySlug: c, brandSlug: b, orderType: o, page: p }),
       ['catalog-products'],
       { tags: ['products', 'catalog-products'] }
     )
   )
-  return getCached(args.search, args.categorySlug, args.brandSlug)
+  return getCached(args.search, args.categorySlug, args.brandSlug, args.orderType, args.page)
 }
 
 // 7. Catalog Product Slugs

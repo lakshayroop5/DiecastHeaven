@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { getCategories, getBrands } from '@/lib/queries'
 import ProductGrid from '@/components/public/product-grid'
-import PillFilter from '@/components/public/pill-filter'
+import CatalogFilters from '@/components/public/catalog-filters'
 
 interface CatalogPageProps {
   searchParams: Promise<{
@@ -9,6 +9,8 @@ interface CatalogPageProps {
     brand?: string
     search?: string
     view?: string
+    page?: string
+    orderType?: string
   }>
 }
 
@@ -33,11 +35,15 @@ function ProductGridSkeleton() {
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const params = await searchParams
-  const { category, brand, search, view } = params
+  const { category, brand, search, view, page, orderType } = params
+  const currentPage = Math.max(1, parseInt(page || '1', 10) || 1)
 
   const [categories, brands] = await Promise.all([getCategories(), getBrands()])
 
   const showBrandView = view === 'brands'
+
+  const activeFilterCount =
+    (orderType ? 1 : 0) + (category ? 1 : 0) + (brand ? 1 : 0)
 
   return (
     <div className="min-h-screen bg-hotwheels-black">
@@ -50,14 +56,12 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
               ? 'Shop by Brand'
               : 'Catalog'}
           </h1>
-          <div className="space-y-4">
-            <PillFilter items={categories} param="category" />
-            {showBrandView ? (
-              <PillFilter items={brands} param="brand" layout="grid" />
-            ) : (
-              <PillFilter items={brands} param="brand" />
-            )}
-          </div>
+          <CatalogFilters
+            categories={categories}
+            brands={brands}
+            showBrandView={showBrandView}
+            activeCount={activeFilterCount}
+          />
           {search && (
             <p className="mt-4 text-sm text-gray-400">
               Searching for &quot;{search}&quot;...
@@ -66,7 +70,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         </div>
 
         <Suspense fallback={<ProductGridSkeleton />}>
-          <ProductGrid search={search} categorySlug={category} brandSlug={brand} />
+          <ProductGrid search={search} categorySlug={category} brandSlug={brand} orderType={orderType} page={currentPage} />
         </Suspense>
       </div>
     </div>

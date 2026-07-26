@@ -11,6 +11,8 @@ interface AddToCartButtonProps {
     title: string
     price: number | null
     offerPrice: number | null
+    depositAmount?: number | null
+    orderType?: string
   }
   imageUrl?: string
   variant?: 'full' | 'compact'
@@ -23,6 +25,7 @@ export default function AddToCartButton({
 }: AddToCartButtonProps) {
   const { addItem } = useCart()
   const [added, setAdded] = useState(false)
+  const isPreOrder = product.orderType === 'PRE_ORDER'
 
   const handleAdd = () => {
     addItem({
@@ -31,22 +34,27 @@ export default function AddToCartButton({
       title: product.title,
       price: product.price,
       offerPrice: product.offerPrice,
+      depositAmount: product.depositAmount ?? null,
+      orderType: product.orderType ?? 'RTD',
       image: imageUrl || '',
     })
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
   }
 
+  const label = isPreOrder ? 'Reserve Now' : 'Add to Cart'
+  const addedLabel = isPreOrder ? 'Reserved!' : 'Added to Cart!'
+
   if (variant === 'compact') {
     return (
       <button
         onClick={handleAdd}
-        className={`inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
+        className={`inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors ${
           added ? 'bg-green-600 text-white' : 'bg-hotwheels-red text-white hover:bg-red-700'
         }`}
       >
         {added ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
-        {added ? 'Added!' : 'Add to Cart'}
+        {added ? addedLabel : label}
       </button>
     )
   }
@@ -61,7 +69,7 @@ export default function AddToCartButton({
       }`}
     >
       {added ? <Check className="h-5 w-5" /> : <ShoppingBag className="h-5 w-5" />}
-      {added ? 'Added to Cart!' : 'Add to Cart'}
+      {added ? addedLabel : label}
     </button>
   )
 }

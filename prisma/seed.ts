@@ -102,6 +102,8 @@ async function main() {
       description: 'Iconic JDM legends in a 5-pack from Majorette. Features the best of Japanese automotive history.',
       image: '/products/jdm-legends-5-pack.jpeg',
       featured: true,
+      orderType: 'PRE_ORDER',
+      depositAmount: 500,
     },
     {
       title: 'Mercedes 5 Pack',
@@ -126,6 +128,8 @@ async function main() {
       description: 'Hotwheels Premium imported modern classic set. Five meticulously crafted models for serious collectors.',
       image: '/products/modern-classic-set-of-5.jpeg',
       featured: true,
+      orderType: 'PRE_ORDER',
+      depositAmount: 1500,
     },
     {
       title: 'Jaguar XJS',
@@ -177,6 +181,8 @@ async function main() {
         offerPrice: product.offerPrice,
         status: 'PUBLISHED',
         featured: product.featured,
+        orderType: product.orderType ?? 'RTD',
+        depositAmount: product.depositAmount ?? null,
         brandId: brands[product.brand],
         categories: {
           create: product.categoryNames.map((name) => ({
@@ -195,7 +201,7 @@ async function main() {
   // Site settings
   await prisma.siteSetting.create({
     data: {
-      businessName: 'Diecast Heaven',
+      businessName: 'Diecast Heaven Udaipur',
       whatsappNumber: '919876543210',
       whatsappDefaultMessage:
         'Hi, I am interested in {product}. Please share more details.',

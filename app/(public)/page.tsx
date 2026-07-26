@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 function FeaturedSkeleton() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black">
           <div className="aspect-square bg-hotwheels-black animate-pulse" />

@@ -57,6 +57,8 @@ async function createTables() {
       "featured" INTEGER NOT NULL DEFAULT 0,
       "sort_order" INTEGER NOT NULL DEFAULT 0,
       "stock" INTEGER NOT NULL DEFAULT 0,
+      "order_type" TEXT NOT NULL DEFAULT 'RTD',
+      "deposit_amount" REAL,
       "brand_id" TEXT,
       "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -139,9 +141,9 @@ async function seedData() {
   const products = [
     { title: 'Japan Racers 5 Pack', brand: 'Majorette', categoryNames: ['5 Pack', 'Gift Sets'], scale: '1:64', price: 1699.0, offerPrice: 1550.0, shortDesc: 'Japan-themed 5 car racer pack from Majorette', description: 'A curated 5-car pack featuring Japanese racing legends from Majorette.', image: '/products/japan-racers-5-pack.jpeg', featured: true },
     { title: 'Castheads 5 Pack', brand: 'Majorette', categoryNames: ['5 Pack', 'Gift Sets'], scale: '1:64', price: 1699.0, offerPrice: 1550.0, shortDesc: 'Castheads 5 car collection pack', description: 'Majorette Castheads 5 pack featuring a diverse selection of detailed diecast models.', image: '/products/castheads-5-pack.jpeg', featured: true },
-    { title: 'JDM Legends 5 Pack', brand: 'Majorette', categoryNames: ['5 Pack', 'Gift Sets'], scale: '1:64', price: 1699.0, offerPrice: 1550.0, shortDesc: 'Japanese Domestic Market legends collection', description: 'Iconic JDM legends in a 5-pack from Majorette.', image: '/products/jdm-legends-5-pack.jpeg', featured: true },
+    { title: 'JDM Legends 5 Pack', brand: 'Majorette', categoryNames: ['5 Pack', 'Gift Sets'], scale: '1:64', price: 1699.0, offerPrice: 1550.0, shortDesc: 'Japanese Domestic Market legends collection', description: 'Iconic JDM legends in a 5-pack from Majorette.', image: '/products/jdm-legends-5-pack.jpeg', featured: true, orderType: 'PRE_ORDER', depositAmount: 500 },
     { title: 'Mercedes 5 Pack', brand: 'Majorette', categoryNames: ['5 Pack', 'Gift Sets'], scale: '1:64', price: 1699.0, offerPrice: 1550.0, shortDesc: 'Mercedes-Benz 5 car luxury pack', description: 'Premium Mercedes-Benz collection in a 5-car gift set from Majorette.', image: '/products/mercedes-5-pack.jpeg', featured: true },
-    { title: 'Modern Classic Set of 5 (Imported)', brand: 'Hotwheels Premium', categoryNames: ['Sets'], scale: '1:64', price: 5999.0, offerPrice: 4899.0, shortDesc: 'Imported premium set of 5 modern classics', description: 'Hotwheels Premium imported modern classic set.', image: '/products/modern-classic-set-of-5.jpeg', featured: true },
+    { title: 'Modern Classic Set of 5 (Imported)', brand: 'Hotwheels Premium', categoryNames: ['Sets'], scale: '1:64', price: 5999.0, offerPrice: 4899.0, shortDesc: 'Imported premium set of 5 modern classics', description: 'Hotwheels Premium imported modern classic set.', image: '/products/modern-classic-set-of-5.jpeg', featured: true, orderType: 'PRE_ORDER', depositAmount: 1500 },
     { title: 'Jaguar XJS', brand: 'Hotwheels Premium', categoryNames: ['Vintage', 'Sports'], scale: '1:64', price: 999.09, offerPrice: 750.0, shortDesc: 'Classic Jaguar XJS in Hotwheels Premium', description: 'The iconic Jaguar XJS in Hotwheels Premium quality.', image: '/products/jaguar-xjs.jpeg', featured: false },
     { title: '96 Greenwood Corvette', brand: 'Hotwheels Premium', categoryNames: ['Vintage', 'Sports'], scale: '1:64', price: 999.0, offerPrice: 650.0, shortDesc: '96 Greenwood Corvette Hotwheels Premium', description: 'The legendary 96 Greenwood Corvette.', image: '/products/96-greenwood-corvette.jpeg', featured: false },
     { title: 'Lancia Stratos', brand: 'Hotwheels Premium', categoryNames: ['Rally Racers', 'Vintage', 'Sports'], scale: '1:64', price: 999.0, offerPrice: 650.0, shortDesc: 'Rally legend Lancia Stratos', description: 'The legendary rally champion Lancia Stratos.', image: '/products/lancia-stratos.jpeg', featured: false },
@@ -170,7 +172,8 @@ async function seedData() {
   // Products
   for (const p of products) {
     const pid = cuid()
-    stmts.push(`INSERT INTO products (id, title, slug, short_desc, description, scale, price, offer_price, status, featured, brand_id) VALUES ('${pid}', '${p.title.replace(/'/g, "''")}', '${slugify(p.title)}', '${p.shortDesc.replace(/'/g, "''")}', '${p.description.replace(/'/g, "''")}', '${p.scale}', ${p.price}, ${p.offerPrice}, 'PUBLISHED', ${p.featured ? 1 : 0}, '${brands[p.brand]}')`)
+    const depositVal = p.depositAmount != null ? p.depositAmount : 'NULL'
+    stmts.push(`INSERT INTO products (id, title, slug, short_desc, description, scale, price, offer_price, status, featured, order_type, deposit_amount, brand_id) VALUES ('${pid}', '${p.title.replace(/'/g, "''")}', '${slugify(p.title)}', '${p.shortDesc.replace(/'/g, "''")}', '${p.description.replace(/'/g, "''")}', '${p.scale}', ${p.price}, ${p.offerPrice}, 'PUBLISHED', ${p.featured ? 1 : 0}, '${p.orderType ?? 'RTD'}', ${depositVal}, '${brands[p.brand]}')`)
     for (const catName of p.categoryNames) {
       stmts.push(`INSERT INTO product_categories (product_id, category_id) VALUES ('${pid}', '${categories[catName]}')`)
     }
@@ -178,7 +181,7 @@ async function seedData() {
   }
 
   // Site settings
-  stmts.push(`INSERT INTO site_settings (id, business_name, whatsapp_number, whatsapp_default_message, hero_title, hero_subtitle) VALUES ('${cuid()}', 'Diecast Heaven', '919079674984', 'Hi, I am interested in {product}. Please share more details.', 'India''s Premium Diecast Destination', 'Hot Wheels \u00b7 Majorette \u00b7 Matchbox \u00b7 Bburago \u00b7 Tomica \u00b7 Tarmac Works \u00b7 Pop Race')`)
+  stmts.push(`INSERT INTO site_settings (id, business_name, whatsapp_number, whatsapp_default_message, hero_title, hero_subtitle) VALUES ('${cuid()}', 'Diecast Heaven Udaipur', '919079674984', 'Hi, I am interested in {product}. Please share more details.', 'India''s Premium Diecast Destination', 'Hot Wheels \u00b7 Majorette \u00b7 Matchbox \u00b7 Bburago \u00b7 Tomica \u00b7 Tarmac Works \u00b7 Pop Race')`)
 
   await client.executeMultiple(stmts.join(';\n') + ';')
   console.log('Turso seed complete!')
