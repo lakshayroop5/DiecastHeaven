@@ -33,6 +33,7 @@ Thumbs.db
 # Local tooling / temp files
 .kilo/
 .remember/
+.codegraph/
 /auth
 /auth-wal
 /init
@@ -47,3 +48,4 @@ images/
 .env*
 
 .env*
+.vercel

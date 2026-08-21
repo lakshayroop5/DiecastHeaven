@@ -1,0 +1,10 @@
+.codegraph/
+.agents/
+.claude/
+.playwright-mcp/
+CLAUDE.md
+skills-lock.json
+prisma/check-featured.ts
+prisma/revalidate-call.ts
+.gitignore
+tsconfig.tsbuildinfo
