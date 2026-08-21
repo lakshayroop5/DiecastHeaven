@@ -13,6 +13,8 @@ export default function PillFilter({ items, param, layout = 'row' }: {
 
   const handleChange = (slug: string) => {
     const params = new URLSearchParams(searchParams)
+    // Drop any stale pagination cursor when filters change (we use scroll-load now).
+    params.delete('page')
     if (slug === 'all') params.delete(param)
     else params.set(param, slug)
     router.push(`/catalog?${params.toString()}`)

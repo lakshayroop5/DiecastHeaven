@@ -1,5 +1,4 @@
-import { Suspense } from 'react'
-import { getCategories, getBrands } from '@/lib/queries'
+import { getCategories, getBrands, getCatalogProducts } from '@/lib/queries'
 import ProductGrid from '@/components/public/product-grid'
 import CatalogFilters from '@/components/public/catalog-filters'
 
@@ -9,41 +8,29 @@ interface CatalogPageProps {
     brand?: string
     search?: string
     view?: string
-    page?: string
     orderType?: string
   }>
 }
 
 export const dynamic = 'force-dynamic'
 
-function ProductGridSkeleton() {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="bg-hotwheels-gray rounded-lg overflow-hidden border border-hotwheels-black">
-          <div className="aspect-square bg-hotwheels-black animate-pulse" />
-          <div className="p-4 space-y-3">
-            <div className="h-3 bg-hotwheels-black rounded w-1/3 animate-pulse" />
-            <div className="h-5 bg-hotwheels-black rounded w-2/3 animate-pulse" />
-            <div className="h-4 bg-hotwheels-black rounded w-1/4 animate-pulse" />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const params = await searchParams
-  const { category, brand, search, view, page, orderType } = params
-  const currentPage = Math.max(1, parseInt(page || '1', 10) || 1)
+  const { category, brand, search, view, orderType } = params
 
-  const [categories, brands] = await Promise.all([getCategories(), getBrands()])
+  const [categories, brands, initial] = await Promise.all([
+    getCategories(),
+    getBrands(),
+    getCatalogProducts({ search, categorySlug: category, brandSlug: brand, orderType, page: 1 }),
+  ])
 
   const showBrandView = view === 'brands'
 
   const activeFilterCount =
     (orderType ? 1 : 0) + (category ? 1 : 0) + (brand ? 1 : 0)
+
+  // Remount the grid when filters change so it resets to a fresh page 1.
+  const gridKey = [search, category, brand, orderType, view].filter(Boolean).join('|') || 'all'
 
   return (
     <div className="min-h-screen bg-hotwheels-black">
@@ -69,9 +56,17 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
           )}
         </div>
 
-        <Suspense fallback={<ProductGridSkeleton />}>
-          <ProductGrid search={search} categorySlug={category} brandSlug={brand} orderType={orderType} page={currentPage} />
-        </Suspense>
+        <ProductGrid
+          key={gridKey}
+          initialProducts={initial.products}
+          initialPage={1}
+          total={initial.total}
+          totalPages={initial.totalPages}
+          search={search}
+          categorySlug={category}
+          brandSlug={brand}
+          orderType={orderType}
+        />
       </div>
     </div>
   )
