@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import HeroMediaManager from './hero-media-manager'
 
 interface Settings {
   id?: string; businessName: string; whatsappNumber: string
@@ -70,6 +71,8 @@ export default function AdminSettings() {
           {saved && <span className="text-green-400 text-sm">Saved!</span>}
         </div>
       </div>
+
+      <HeroMediaManager />
     </div>
   )
 }
