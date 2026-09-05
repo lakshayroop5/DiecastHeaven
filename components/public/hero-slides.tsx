@@ -29,16 +29,27 @@ export default function HeroSlides({ slides }: { slides: HeroSlide[] }) {
     dragStart.current = { x: e.clientX, y: e.clientY }
   }
 
-  const onPointerUp = (e: ReactPointerEvent) => {
+  const onSwipe = (x: number, y: number) => {
     const start = dragStart.current
     dragStart.current = null
     if (!start) return
-    const dx = e.clientX - start.x
-    const dy = e.clientY - start.y
+    const dx = x - start.x
+    const dy = y - start.y
     if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) {
       dx < 0 ? goNext() : goPrev()
     }
   }
+
+  const onPointerMove = (e: ReactPointerEvent) => {
+    if (!dragStart.current) return
+    const dx = e.clientX - dragStart.current.x
+    // Horizontal intent detected: commit swipe now, before the browser
+    // claims the gesture for vertical scrolling (pointercancel).
+    if (Math.abs(dx) > 48) onSwipe(e.clientX, e.clientY)
+  }
+
+  const onPointerUp = (e: ReactPointerEvent) => onSwipe(e.clientX, e.clientY)
+  const onPointerCancel = (e: ReactPointerEvent) => onSwipe(e.clientX, e.clientY)
 
   useEffect(() => {
     if (count < 2) return
@@ -55,8 +66,9 @@ export default function HeroSlides({ slides }: { slides: HeroSlide[] }) {
       draggable={false}
       onDragStart={(e) => e.preventDefault()}
       onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      onPointerCancel={() => (dragStart.current = null)}
+      onPointerCancel={onPointerCancel}
     >
       {/* Slides - crossfade stack */}
       {slides.map((slide, i) => (
