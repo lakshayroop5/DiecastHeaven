@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Hero from '@/components/public/hero'
 import FeaturedProducts from '@/components/public/featured-products'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
-import { getCategories, getBrands, getSiteSettings } from '@/lib/queries'
+import { getCategories, getBrands, getSiteSettings, getHeroMedia } from '@/lib/queries'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,10 +25,11 @@ function FeaturedSkeleton() {
 }
 
 export default async function HomePage() {
-  const [categories, brands, settings] = await Promise.all([
+  const [categories, brands, settings, heroMedia] = await Promise.all([
     getCategories(),
     getBrands(),
     getSiteSettings(),
+    getHeroMedia(),
   ])
 
   return (
@@ -41,6 +42,7 @@ export default async function HomePage() {
           process.env.DEFAULT_HERO_SUBTITLE ||
           'Hot Wheels \u00b7 Majorette \u00b7 Matchbox \u00b7 Bburago \u00b7 Tomica'
         }
+        media={heroMedia}
       />
 
       {/* Featured Products */}

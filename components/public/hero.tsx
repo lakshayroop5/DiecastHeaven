@@ -1,13 +1,16 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import WhatsAppCTA from './whatsapp-cta'
+import HeroSlides, { type HeroSlide } from './hero-slides'
 
 interface HeroProps {
   title: string
   subtitle: string
   ctaText?: string
   ctaLink?: string
+  media?: HeroSlide[]
 }
+
+const FALLBACK_SLIDES: HeroSlide[] = [{ id: 'default', url: '/hero-banner.jpeg', type: 'IMAGE' }]
 
 const TICKER_ITEMS = [
   'Featured Collections',
@@ -21,36 +24,22 @@ export default function Hero({
   subtitle,
   ctaText = 'Shop Collection',
   ctaLink = '/catalog',
+  media = [],
 }: HeroProps) {
+  const slides = media.length > 0 ? media : FALLBACK_SLIDES
+
   return (
     <div className="relative w-full min-h-[60vh] sm:min-h-[75vh] lg:min-h-[85vh] flex flex-col justify-center bg-hotwheels-black overflow-hidden">
       
-      {/* Background Image Layers - z-0 to avoid negative z-index stacking bugs */}
-      <div className="absolute inset-0 z-0 select-none pointer-events-none">
-        {/* Blurred background image to fill empty spaces on tall/narrow screens (mobile) */}
-        <Image
-          src="/hero-banner.jpeg"
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover blur-xl opacity-40 scale-105"
-          priority
-        />
-        {/* Crisp foreground image: object-contain on mobile to show full image uncropped, object-cover on desktop */}
-        <Image
-          src="/hero-banner.jpeg"
-          alt="Diecast car showcase"
-          fill
-          sizes="100vw"
-          className="object-contain sm:object-cover"
-          priority
-        />
+      {/* Background media layers - z-0 to avoid negative z-index stacking bugs. Pointer events ON so users can drag/swipe slides. */}
+      <div className="absolute inset-0 z-0 select-none">
+        <HeroSlides slides={slides} />
         {/* Gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent pointer-events-none" />
       </div>
 
-      {/* Content - z-10 to overlay perfectly */}
-      <div className="relative z-10 mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 flex-1 flex flex-col justify-center">
+      {/* Content - z-10 to overlay perfectly. pointer-events-none so drags pass through to slides; interactive elements re-enable it. */}
+      <div className="relative z-10 mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 flex-1 flex flex-col justify-center pointer-events-none">
         <div className="max-w-2xl">
           <h1 className="text-3xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-[1.1] tracking-tight drop-shadow-md">
             {title}
@@ -58,7 +47,7 @@ export default function Hero({
           <p className="mt-4 sm:mt-6 text-sm sm:text-lg text-gray-300 drop-shadow-sm">
             {subtitle}
           </p>
-          <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
+          <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3 sm:gap-4 pointer-events-auto">
             <Link
               href={ctaLink}
               className="rounded-md bg-white text-black px-5 sm:px-7 py-2.5 sm:py-3 text-xs sm:text-sm font-bold hover:bg-gray-200 transition-colors shadow-lg"
