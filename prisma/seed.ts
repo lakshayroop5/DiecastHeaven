@@ -16,6 +16,7 @@ async function main() {
   await prisma.category.deleteMany()
   await prisma.brand.deleteMany()
   await prisma.siteSetting.deleteMany()
+  await prisma.heroMedia.deleteMany()
 
   // Create brands
   const brandData = [
@@ -211,7 +212,11 @@ async function main() {
     },
   })
 
-  console.log('Seed complete: brands, categories, products, images, settings')
+  await prisma.heroMedia.create({
+    data: { url: '/hero-banner.jpeg', type: 'IMAGE', sortOrder: 0 },
+  })
+
+  console.log('Seed complete: brands, categories, products, images, settings, hero media')
 }
 
 main()

@@ -98,6 +98,28 @@ export const getSiteSettings = cache(
   )
 )
 
+// 1b. Hero Banner Media (carousel slides, ordered)
+export interface HeroMediaItem {
+  id: string
+  url: string
+  type: string
+  sortOrder: number
+}
+
+const getHeroMediaRaw = (): Promise<HeroMediaItem[]> => {
+  return safeQuery(
+    prisma.heroMedia.findMany({ orderBy: { sortOrder: 'asc' } }),
+    []
+  )
+}
+export const getHeroMedia = cache(
+  safeUnstableCache(
+    getHeroMediaRaw,
+    ['hero-media'],
+    { tags: ['hero-media'] }
+  )
+)
+
 // 2. Categories
 const getCategoriesRaw = () => {
   return safeQuery(prisma.category.findMany({ orderBy: { name: 'asc' } }), [])
