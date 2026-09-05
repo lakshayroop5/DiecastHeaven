@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getSiteSettings } from '@/lib/queries'
 import Header from '@/components/public/header'
 import Footer from '@/components/public/footer'
+import PageViewTracker from '@/components/analytics/page-view-tracker'
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings()
@@ -19,6 +20,7 @@ export default async function PublicLayout({
   const settings = await getSiteSettings()
   return (
     <>
+      <PageViewTracker />
       <Header whatsappNumber={settings?.whatsappNumber} />
       <main className="flex-1">{children}</main>
       <Footer />

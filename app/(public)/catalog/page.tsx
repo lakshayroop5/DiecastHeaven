@@ -1,6 +1,7 @@
 import { getCategories, getBrands, getCatalogProducts } from '@/lib/queries'
 import ProductGrid from '@/components/public/product-grid'
 import CatalogFilters from '@/components/public/catalog-filters'
+import CatalogEventTracker from '@/components/analytics/catalog-event-tracker'
 
 interface CatalogPageProps {
   searchParams: Promise<{
@@ -34,6 +35,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
   return (
     <div className="min-h-screen bg-hotwheels-black">
+      <CatalogEventTracker search={search} category={category} brand={brand} orderType={orderType} />
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-hotwheels-white mb-4">

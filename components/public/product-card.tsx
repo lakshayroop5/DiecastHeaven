@@ -6,6 +6,7 @@ import type { Product } from '@prisma/client'
 import WhatsAppCTA from './whatsapp-cta'
 import AddToCartButton from './add-to-cart-button'
 import { formatPrice } from '@/lib/utils'
+import { track } from '@/lib/track'
 
 interface ProductWithImages extends Product {
   brand: { name: string; slug: string } | null
@@ -25,6 +26,22 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const isSoldOut = product.status === 'SOLD_OUT'
   const isPreOrder = product.orderType === 'PRE_ORDER'
 
+  const trackProductClick = () => {
+    const path = window.location.pathname
+    const source = path === '/' ? 'featured' : path.startsWith('/product/') ? 'related' : 'catalog'
+    track({
+      eventType: 'PRODUCT_CLICK',
+      productId: product.id,
+      productSlug: product.slug,
+      productTitle: product.title,
+      featured: product.featured,
+      orderType: product.orderType,
+      brand: product.brand?.name,
+      category: product.categories[0]?.category.name,
+      source,
+    })
+  }
+
   return (
     <article className={`group relative flex flex-col h-full rounded-lg overflow-hidden border transition-all duration-300 animate-fade-in ${
       isPreOrder
@@ -34,7 +51,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       {/* Gloss sheen overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-10" />
 
-      <Link href={`/product/${product.slug}`}>
+      <Link href={`/product/${product.slug}`} onClick={trackProductClick}>
         <figure className="aspect-square relative bg-hotwheels-black overflow-hidden">
           {mainImage ? (
             <Image
@@ -95,7 +112,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         )}
 
         {/* Title */}
-        <Link href={`/product/${product.slug}`}>
+        <Link href={`/product/${product.slug}`} onClick={trackProductClick}>
           <h3 className="text-base font-bold text-white uppercase italic leading-tight group-hover:text-hotwheels-yellow transition-colors line-clamp-2">
             {product.title}
           </h3>

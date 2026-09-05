@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ShoppingBag, Check } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
+import { track } from '@/lib/track'
 
 interface AddToCartButtonProps {
   product: {
@@ -37,6 +38,14 @@ export default function AddToCartButton({
       depositAmount: product.depositAmount ?? null,
       orderType: product.orderType ?? 'RTD',
       image: imageUrl || '',
+    })
+    track({
+      eventType: 'ADD_TO_CART',
+      productId: product.id,
+      productSlug: product.slug,
+      productTitle: product.title,
+      orderType: product.orderType,
+      source: variant === 'compact' ? 'card' : 'product-page',
     })
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)

@@ -2,6 +2,7 @@
 
 import { MessageCircle } from 'lucide-react'
 import { buildProductInquiryLink, buildGeneralInquiryLink } from '@/lib/whatsapp'
+import { track } from '@/lib/track'
 
 interface WhatsAppCTAProps {
   productName?: string
@@ -29,6 +30,7 @@ export default function WhatsAppCTA({
   variant = 'primary' 
 }: WhatsAppCTAProps) {
   const handleClick = async () => {
+    track({ eventType: 'WHATSAPP_CLICK', productTitle: productName, source: variant })
     try {
       const response = await fetch('/api/settings')
       const settings = response.ok ? await response.json() : DEFAULT_SETTINGS

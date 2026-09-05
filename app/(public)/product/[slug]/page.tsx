@@ -7,6 +7,7 @@ import WhatsAppCTA from '@/components/public/whatsapp-cta'
 import AddToCartButton from '@/components/public/add-to-cart-button'
 import RelatedProducts from '@/components/public/related-products'
 import ProductImageGallery from '@/components/public/product-image-gallery'
+import ProductViewTracker from '@/components/analytics/product-view-tracker'
 import { Badge } from '@/components/ui/badge'
 import { formatPrice } from '@/lib/utils'
 import type { Metadata } from 'next'
@@ -73,6 +74,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div className="min-h-screen bg-hotwheels-black">
+      <ProductViewTracker
+        product={{
+          id: product.id,
+          slug: product.slug,
+          title: product.title,
+          featured: product.featured,
+          orderType: product.orderType,
+          brandName: product.brand?.name,
+          categoryName: product.categories[0]?.category.name,
+        }}
+      />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:py-12 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <nav className="mb-4 sm:mb-6 text-xs sm:text-sm text-gray-400">

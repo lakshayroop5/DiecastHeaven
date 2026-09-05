@@ -101,3 +101,25 @@ model SiteSetting {
 
   @@map("site_settings")
 }
+
+model AnalyticsEvent {
+  id           String   @id @default(cuid())
+  eventType    String
+  visitorId    String
+  productId    String?  @map("product_id")
+  productSlug  String?  @map("product_slug")
+  productTitle String?  @map("product_title")
+  brand        String?
+  category     String?
+  featured     Boolean  @default(false)
+  orderType    String?
+  source       String?
+  searchQuery  String?  @map("search_query")
+  meta         String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([eventType, createdAt])
+  @@index([visitorId, productSlug, createdAt])
+  @@index([productSlug])
+  @@map("analytics_events")
+}

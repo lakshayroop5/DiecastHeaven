@@ -10,13 +10,13 @@ export async function POST(req: NextRequest) {
   }
   const password = typeof body?.password === 'string' ? body.password : ''
 
-  const expected = process.env.ADMIN_PASSWORD
+  const expected = process.env.ANALYTICS_PASSWORD
   if (!expected || !(await passwordMatches(password, expected))) {
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
   }
 
   const res = NextResponse.json({ ok: true })
-  res.cookies.set('admin_token', await signSession(expected, 60 * 60 * 24), {
+  res.cookies.set('analytics_token', await signSession(expected, 60 * 60 * 24), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',

@@ -4,9 +4,10 @@ import {
   createContext,
   useContext,
   useEffect,
-  useReducer,
-  ReactNode,
   useMemo,
+  useReducer,
+  useState,
+  type ReactNode,
 } from 'react'
 
 export interface CartItem {
@@ -90,6 +91,7 @@ const CartContext = createContext<CartContextValue | null>(null)
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, { items: [] })
+  const [hydrated, setHydrated] = useState(false)
 
   // Hydrate from localStorage on mount
   useEffect(() => {
@@ -102,16 +104,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore parse errors
     }
+    setHydrated(true)
   }, [])
 
-  // Persist to localStorage whenever items change
+  // Persist to localStorage whenever items change (after hydration, or we'd wipe the cart)
   useEffect(() => {
+    if (!hydrated) return
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items))
     } catch {
       // ignore (e.g. private mode)
     }
-  }, [state.items])
+  }, [state.items, hydrated])
 
   const value = useMemo<CartContextValue>(() => {
     const totalItems = state.items.reduce((sum, i) => sum + i.quantity, 0)

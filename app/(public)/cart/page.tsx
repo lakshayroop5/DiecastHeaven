@@ -6,6 +6,7 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import { formatPrice } from '@/lib/utils'
 import { buildWhatsAppLink } from '@/lib/whatsapp'
+import { track } from '@/lib/track'
 
 export default function CartPage() {
   const { items, subtotal, totalItems, updateQuantity, removeItem, clearCart } = useCart()
@@ -35,6 +36,14 @@ export default function CartPage() {
       '\n'
     )}\n\nTotal: ${formatPrice(subtotal)}\n\nPlease confirm availability and payment details.`
     const link = buildWhatsAppLink(whatsappNumber, message)
+    track({
+      eventType: 'CART_CHECKOUT',
+      meta: JSON.stringify({
+        items: items.map((i) => ({ slug: i.slug, qty: i.quantity })),
+        totalItems,
+        subtotal,
+      }),
+    })
     window.open(link, '_blank')
     setTimeout(() => setCheckingOut(false), 1500)
   }
