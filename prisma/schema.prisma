@@ -79,6 +79,16 @@ model ProductImage {
   @@map("product_images")
 }
 
+model HeroMedia {
+  id        String   @id @default(cuid())
+  url       String
+  type      String   @default("IMAGE")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("hero_media")
+}
+
 model SiteSetting {
   id                     String   @id @default(cuid())
   businessName           String   @map("business_name")
