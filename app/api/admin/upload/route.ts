@@ -7,8 +7,14 @@ export async function POST(req: NextRequest) {
   const file = formData.get('file') as File | null
   if (!file) return NextResponse.json({ error: 'No file' }, { status: 400 })
 
-  if (file.size > 10 * 1024 * 1024) {
-    return NextResponse.json({ error: 'Image must be under 10MB' }, { status: 400 })
+  const isVideo = (file.type || '').startsWith('video/')
+  // ponytail: serverless request body caps ~4.5MB on Vercel; large videos need client-side uploads if they fail
+  const maxSize = isVideo ? 100 * 1024 * 1024 : 10 * 1024 * 1024
+  if (file.size > maxSize) {
+    return NextResponse.json(
+      { error: isVideo ? 'Video must be under 100MB' : 'Image must be under 10MB' },
+      { status: 400 }
+    )
   }
 
   const token = process.env.BLOB_READ_WRITE_TOKEN
@@ -33,9 +39,10 @@ export async function POST(req: NextRequest) {
     const uniqueName = `${Date.now()}-${baseName}.${extension}`
 
     // Upload to Vercel Blob
-    const blob = await put(`products/${uniqueName}`, buffer, {
+    const folder = (formData.get('folder') as string | null) || 'products'
+    const blob = await put(`${folder}/${uniqueName}`, buffer, {
       access: 'public',
-      contentType: file.type || 'image/jpeg',
+      contentType: file.type || 'application/octet-stream',
       token: token,
     })
 
