@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Hero from '@/components/public/hero'
 import FeaturedProducts from '@/components/public/featured-products'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
-import { getCategories, getBrands, getSiteSettings, getHeroMedia } from '@/lib/queries'
+import { getBrands, getSiteSettings, getHeroMedia } from '@/lib/queries'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,8 +25,7 @@ function FeaturedSkeleton() {
 }
 
 export default async function HomePage() {
-  const [categories, brands, settings, heroMedia] = await Promise.all([
-    getCategories(),
+  const [brands, settings, heroMedia] = await Promise.all([
     getBrands(),
     getSiteSettings(),
     getHeroMedia(),
@@ -63,28 +62,6 @@ export default async function HomePage() {
           <Suspense fallback={<FeaturedSkeleton />}>
             <FeaturedProducts />
           </Suspense>
-        </div>
-      </section>
-
-      {/* Categories */}
-      <section className="py-16 bg-hotwheels-gray">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-hotwheels-white mb-8">
-            Shop by Category
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                href={`/catalog?category=${category.slug}`}
-                className="group bg-hotwheels-black rounded-lg p-6 text-center hover:bg-hotwheels-red/20 transition-colors border border-hotwheels-black hover:border-hotwheels-red"
-              >
-                <h3 className="font-semibold text-hotwheels-white group-hover:text-hotwheels-yellow transition-colors">
-                  {category.name}
-                </h3>
-              </Link>
-            ))}
-          </div>
         </div>
       </section>
 
