@@ -14,6 +14,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json()
   const { categoryIds, images, ...product } = body
+  const imageRows = (images ?? []) as Array<{ imageUrl: string; altText: string | null; sortOrder?: number }>
 
   const data: any = { ...product }
 
@@ -27,9 +28,17 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
   if (images !== undefined) {
     await prisma.productImage.deleteMany({ where: { productId: params.id } })
-    data.images = images.length
-      ? { create: images }
-      : { deleteMany: {} }
+    // ponytail: one INSERT for all images, not N nested writes
+    if (imageRows.length) {
+      await prisma.productImage.createMany({
+        data: imageRows.map((img, i) => ({
+          productId: params.id,
+          imageUrl: img.imageUrl,
+          altText: img.altText ?? null,
+          sortOrder: img.sortOrder ?? i,
+        })),
+      })
+    }
   }
 
   const updated = await prisma.product.update({

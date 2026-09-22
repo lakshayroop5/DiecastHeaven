@@ -17,6 +17,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const body = await req.json()
   const { categoryIds, images, ...product } = body
+  const imageRows = (images ?? []) as Array<{ imageUrl: string; altText: string | null; sortOrder?: number }>
 
   // ponytail: assign unique sortOrder so drag-and-drop works reliably
   // ponytail: negative sortOrder = top of list, O(1) insert
@@ -30,13 +31,26 @@ export async function POST(req: NextRequest) {
       categories: categoryIds?.length
         ? { create: categoryIds.map((id: string) => ({ categoryId: id })) }
         : undefined,
-      images: images?.length
-        ? { create: images }
-        : undefined,
     },
+  })
+
+  // ponytail: one INSERT for all images, not N nested writes
+  if (imageRows.length) {
+    await prisma.productImage.createMany({
+      data: imageRows.map((img, i) => ({
+        productId: created.id,
+        imageUrl: img.imageUrl,
+        altText: img.altText ?? null,
+        sortOrder: img.sortOrder ?? i,
+      })),
+    })
+  }
+
+  const withRelations = await prisma.product.findUnique({
+    where: { id: created.id },
     include: { brand: true, categories: { include: { category: true } }, images: true },
   })
 
   revalidateTag('products')
-  return NextResponse.json(created, { status: 201 })
+  return NextResponse.json(withRelations, { status: 201 })
 }
