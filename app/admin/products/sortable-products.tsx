@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
 import { CSS } from '@dnd-kit/utilities'
+import { Info } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
 import DeleteButton from '../delete-button'
 
@@ -15,6 +16,8 @@ interface Product {
   price: number | null; offerPrice: number | null; sortOrder: number
   brand: { name: string } | null
 }
+
+const FILTER_KEY = 'admin-products-filters'
 
 export default function SortableProducts({ products: initial }: { products: Product[] }) {
   const [products, setProducts] = useState(initial)
@@ -41,11 +44,29 @@ export default function SortableProducts({ products: initial }: { products: Prod
   // ponytail: sync state when server re-fetches after reorder/refresh
   useEffect(() => { setProducts(initial) }, [initial])
 
-  // one-time reindex: fix legacy products with duplicate sortOrder
+  // ponytail: defaults first so client matches server HTML, restore stored filters after mount
+  const firstSave = useRef(true)
   useEffect(() => {
-    if (localStorage.getItem('products-reindexed')) return
+    try {
+      const s = JSON.parse(sessionStorage.getItem(FILTER_KEY) || '{}') as Record<string, string>
+      if (s.search) setSearch(s.search)
+      if (s.brandFilter) setBrandFilter(s.brandFilter)
+      if (s.statusFilter) setStatusFilter(s.statusFilter)
+      if (s.stockFilter) setStockFilter(s.stockFilter)
+      if (s.orderType) setOrderTypeFilter(s.orderType)
+    } catch { /* corrupted entry ignored, defaults stand */ }
+  }, [])
+
+  useEffect(() => {
+    if (firstSave.current) { firstSave.current = false; return }
+    try { sessionStorage.setItem(FILTER_KEY, JSON.stringify({ search, brandFilter, statusFilter, stockFilter, orderType: orderTypeFilter })) } catch { /* ponytail: private-mode write can throw, filters just reset */ }
+  }, [search, brandFilter, statusFilter, stockFilter, orderTypeFilter])
+
+  // one-time reindex: spread legacy sequential sortOrders into spaced values
+  useEffect(() => {
+    if (localStorage.getItem('products-reindexed-v2')) return
     fetch('/api/admin/products/reorder', { method: 'PATCH' }).then(() => {
-      localStorage.setItem('products-reindexed', '1')
+      localStorage.setItem('products-reindexed-v2', '1')
       router.refresh()
     })
   }, [])
@@ -54,26 +75,42 @@ export default function SortableProducts({ products: initial }: { products: Prod
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
   )
 
+  const isFiltered = search !== '' || brandFilter !== 'ALL' || statusFilter !== 'ALL' || stockFilter !== 'ALL' || orderTypeFilter !== 'ALL'
+
   const handleDragEnd = async (event: any) => {
     const { active, over } = event
-    if (!over || active.id === over.id) return
+    if (!over || active.id === over.id || isFiltered) return
 
     const oldIndex = products.findIndex((p) => p.id === active.id)
     const newIndex = products.findIndex((p) => p.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
+    const prev = products
     const reordered = arrayMove(products, oldIndex, newIndex)
     setProducts(reordered)
 
     setSaving(true)
-    await fetch('/api/admin/products/reorder', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderedIds: reordered.map((p) => p.id) }),
-    })
-    setSaving(false)
-    router.refresh()
+    try {
+      const res = await fetch('/api/admin/products/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activeId: active.id, overId: over.id }),
+      })
+      if (!res.ok) throw new Error(`reorder failed (${res.status})`)
+      const data = await res.json().catch(() => null)
+      if (typeof data?.sortOrder === 'number') {
+        const sortOrder = data.sortOrder as number
+        setProducts((cur) => cur.map((p) => (p.id === active.id ? { ...p, sortOrder } : p)))
+      }
+    } catch {
+      // ponytail: rollback optimistic move, server state wins
+      setProducts(prev)
+      router.refresh()
+    } finally {
+      setSaving(false)
+    }
   }
 
- return (
+  return (
     <div>
       <div className="flex flex-wrap gap-3 mb-4">
         <input
@@ -102,7 +139,18 @@ export default function SortableProducts({ products: initial }: { products: Prod
           <option value="RTD">RTD</option>
           <option value="PRE_ORDER">Pre-Order</option>
         </select>
+        {isFiltered && (
+          <button type="button" onClick={() => { setSearch(''); setBrandFilter('ALL'); setStatusFilter('ALL'); setStockFilter('ALL'); setOrderTypeFilter('ALL') }} className="px-3 py-2 border border-hotwheels-gray rounded text-sm text-gray-400 hover:text-white hover:border-hotwheels-yellow">
+            Reset
+          </button>
+        )}
       </div>
+      {isFiltered && (
+        <div className="flex items-center gap-2 px-3 py-2 mb-4 rounded border border-hotwheels-yellow/30 bg-hotwheels-yellow/10 text-xs text-hotwheels-yellow">
+          <Info className="h-4 w-4 shrink-0" />
+          <span>Reordering is paused while filters are active. Reset the filters to reorder products.</span>
+        </div>
+      )}
 
       <div className="bg-hotwheels-gray rounded-lg border border-hotwheels-black overflow-x-auto">
         {saving && <div className="px-4 py-2 text-xs text-gray-400 border-b border-hotwheels-black">Saving order...</div>}
