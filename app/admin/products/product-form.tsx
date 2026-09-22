@@ -68,6 +68,10 @@ export default function ProductForm({ product }: Props) {
   const initialImages = useRef(
     (product?.images || []).map((img) => `${img.imageUrl}|${img.altText || ''}`).join('\n')
   )
+  // ponytail: same trick for categories; server skips omitted keys
+  const initialCategories = useRef(
+    [...(product?.categories.map((c) => c.categoryId) || [])].sort().join(',')
+  )
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
@@ -175,6 +179,8 @@ export default function ProductForm({ product }: Props) {
     try {
       const imageKey = form.images.map((img) => `${img.imageUrl}|${img.altText || ''}`).join('\n')
       const imagesChanged = !product || imageKey !== initialImages.current
+      const categoryKey = [...form.categoryIds].sort().join(',')
+      const categoriesChanged = !product || categoryKey !== initialCategories.current
       const body = {
         title: form.title,
         slug: form.slug || toSlug(form.title),
@@ -189,7 +195,7 @@ export default function ProductForm({ product }: Props) {
         featured: form.featured,
         stock: parseInt(form.stock) || 0,
         brandId: form.brandId || null,
-        categoryIds: form.categoryIds,
+        ...(categoriesChanged ? { categoryIds: form.categoryIds } : {}),
         ...(imagesChanged
           ? {
               images: form.images.map((img, i) => ({
@@ -214,10 +220,7 @@ export default function ProductForm({ product }: Props) {
       }
 
       setOverlayState('success')
-      setTimeout(() => {
-        router.push('/admin/products')
-        router.refresh()
-      }, 550)
+      router.push('/admin/products')
     } catch (err: any) {
       setErrorMessage(err.message || 'Something went wrong')
       setOverlayState('error')
@@ -393,7 +396,7 @@ export default function ProductForm({ product }: Props) {
                   Diecast Heaven Udaipur
                 </p>
                 <p className="relative z-10 text-[11px] tracking-[0.2em] text-gray-400 uppercase">
-                  Uploading<span style={{ animation: 'dots 1.4s steps(4) infinite' }}>...</span>
+                  Saving<span style={{ animation: 'dots 1.4s steps(4) infinite' }}>...</span>
                 </p>
               </>
             )}
