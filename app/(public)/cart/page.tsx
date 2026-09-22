@@ -6,6 +6,7 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import { formatPrice } from '@/lib/utils'
 import { buildWhatsAppLink } from '@/lib/whatsapp'
+import { buildSharedCartUrl } from '@/lib/cart-share'
 import { track } from '@/lib/track'
 
 export default function CartPage() {
@@ -34,7 +35,10 @@ export default function CartPage() {
     )
     const message = `Hi ${businessName || 'Diecast Heaven Udaipur'}! I'd like to order:\n\n${lines.join(
       '\n'
-    )}\n\nTotal: ${formatPrice(subtotal)}\n\nPlease confirm availability and payment details.`
+    )}\n\nTotal: ${formatPrice(subtotal)}\n\nView cart: ${buildSharedCartUrl(
+      process.env.NEXT_PUBLIC_SITE_URL || window.location.origin,
+      items.map((i) => ({ id: i.id, quantity: i.quantity }))
+    )}\n\nPlease confirm availability and payment details.`
     const link = buildWhatsAppLink(whatsappNumber, message)
     track({
       eventType: 'CART_CHECKOUT',
