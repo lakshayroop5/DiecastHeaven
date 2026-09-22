@@ -64,6 +64,10 @@ export default function ProductForm({ product }: Props) {
   const [uploading, setUploading] = useState(false)
   const [pending, setPending] = useState<Array<{ key: string; preview: string; name: string }>>([])
   const fileRef = useRef<HTMLInputElement>(null)
+  // ponytail: snapshot edit-mode images; skip image writes when untouched
+  const initialImages = useRef(
+    (product?.images || []).map((img) => `${img.imageUrl}|${img.altText || ''}`).join('\n')
+  )
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
@@ -119,23 +123,20 @@ export default function ProductForm({ product }: Props) {
     setPending(previews)
     setUploading(true)
     try {
-      const uploaded: FormImage[] = []
-      for (let i = 0; i < valid.length; i++) {
-        const file = valid[i]
+      await Promise.all(valid.map(async (file, i) => {
         const formData = new FormData()
         formData.append('file', file)
         try {
           const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
           if (res.ok) {
             const { id, imageUrl } = await res.json() as { id?: string; imageUrl: string }
-            if (imageUrl) uploaded.push({ imageUrl, altText: '', id })
+            if (imageUrl) setForm((f) => ({ ...f, images: [...f.images, { imageUrl, altText: '', id }] }))
           }
         } finally {
           URL.revokeObjectURL(previews[i].preview)
           setPending((p) => p.filter((x) => x.key !== previews[i].key))
         }
-      }
-      if (uploaded.length) setForm((f) => ({ ...f, images: [...f.images, ...uploaded] }))
+      }))
     } finally {
       setUploading(false)
       e.target.value = ''
@@ -172,6 +173,8 @@ export default function ProductForm({ product }: Props) {
     setOverlayState('uploading')
 
     try {
+      const imageKey = form.images.map((img) => `${img.imageUrl}|${img.altText || ''}`).join('\n')
+      const imagesChanged = !product || imageKey !== initialImages.current
       const body = {
         title: form.title,
         slug: form.slug || toSlug(form.title),
@@ -187,9 +190,13 @@ export default function ProductForm({ product }: Props) {
         stock: parseInt(form.stock) || 0,
         brandId: form.brandId || null,
         categoryIds: form.categoryIds,
-        images: form.images.map((img, i) => ({
-          imageUrl: img.imageUrl, altText: img.altText || null, sortOrder: i, id: img.id || undefined,
-        })),
+        ...(imagesChanged
+          ? {
+              images: form.images.map((img, i) => ({
+                imageUrl: img.imageUrl, altText: img.altText || null, sortOrder: i, id: img.id || undefined,
+              })),
+            }
+          : {}),
       }
 
       const url = product ? `/api/admin/products/${product.id}` : '/api/admin/products'
@@ -210,7 +217,7 @@ export default function ProductForm({ product }: Props) {
       setTimeout(() => {
         router.push('/admin/products')
         router.refresh()
-      }, 1500)
+      }, 550)
     } catch (err: any) {
       setErrorMessage(err.message || 'Something went wrong')
       setOverlayState('error')
