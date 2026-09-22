@@ -4,6 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toSlug } from '@/lib/slug'
 import { CheckCircle, XCircle } from 'lucide-react'
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, useSortable, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 function RaceCar({ className }: { className?: string }) {
   return (
@@ -39,6 +42,7 @@ function RaceCar({ className }: { className?: string }) {
 interface Brand { id: string; name: string }
 interface Category { id: string; name: string }
 interface ProductImage { imageUrl: string; altText: string | null; id?: string }
+interface FormImage { imageUrl: string; altText: string; id?: string }
 
 interface Props {
   product?: {
@@ -58,8 +62,17 @@ export default function ProductForm({ product }: Props) {
   const [overlayState, setOverlayState] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [pending, setPending] = useState<Array<{ key: string; preview: string; name: string }>>([])
   const fileRef = useRef<HTMLInputElement>(null)
-  const [form, setForm] = useState({
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
+  )
+  const [form, setForm] = useState<{
+    title: string; slug: string; description: string; shortDesc: string; scale: string;
+    price: string; offerPrice: string; status: string; featured: boolean; stock: string;
+    orderType: string; depositAmount: string; brandId: string; categoryIds: string[]; images: FormImage[];
+  }>({
     title: product?.title || '',
     slug: product?.slug || '',
     description: product?.description || '',
@@ -74,9 +87,7 @@ export default function ProductForm({ product }: Props) {
     depositAmount: product?.depositAmount?.toString() || '',
     brandId: product?.brandId || '',
     categoryIds: product?.categories.map((c) => c.categoryId) || [],
-    imageUrl: product?.images[0]?.imageUrl || '',
-    imageAlt: product?.images[0]?.altText || '',
-    imageId: product?.images[0]?.id || '',
+    images: (product?.images || []).map((img) => ({ imageUrl: img.imageUrl, altText: img.altText || '', id: img.id })),
   })
 
   useEffect(() => {
@@ -96,21 +107,65 @@ export default function ProductForm({ product }: Props) {
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.size > 10 * 1024 * 1024) { alert('Image must be under 10MB'); return }
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+    const valid = files.filter((f) => {
+      if (f.size > 10 * 1024 * 1024) { alert(`${f.name}: Image must be under 10MB`); return false }
+      return true
+    })
+    if (!valid.length) { e.target.value = ''; return }
 
+    const previews = valid.map((f) => ({ key: `${Date.now()}-${f.name}`, preview: URL.createObjectURL(f), name: f.name }))
+    setPending(previews)
     setUploading(true)
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
-    if (res.ok) {
-      const { id, imageUrl } = await res.json()
-      setForm((f) => ({ ...f, imageUrl, imageId: id }))
+    try {
+      const uploaded: FormImage[] = []
+      for (let i = 0; i < valid.length; i++) {
+        const file = valid[i]
+        const formData = new FormData()
+        formData.append('file', file)
+        try {
+          const res = await fetch('/api/admin/upload', { method: 'POST', body: formData })
+          if (res.ok) {
+            const { id, imageUrl } = await res.json() as { id?: string; imageUrl: string }
+            if (imageUrl) uploaded.push({ imageUrl, altText: '', id })
+          }
+        } finally {
+          URL.revokeObjectURL(previews[i].preview)
+          setPending((p) => p.filter((x) => x.key !== previews[i].key))
+        }
+      }
+      if (uploaded.length) setForm((f) => ({ ...f, images: [...f.images, ...uploaded] }))
+    } finally {
+      setUploading(false)
+      e.target.value = ''
     }
-    setUploading(false)
   }
+
+  const handleImageDragEnd = (event: { active: { id: string | number }; over?: { id: string | number } | null }) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setForm((f) => {
+      const ids = f.images.map((img) => img.imageUrl)
+      const oldIndex = ids.indexOf(String(active.id))
+      const newIndex = ids.indexOf(String(over.id))
+      if (oldIndex < 0 || newIndex < 0) return f
+      return { ...f, images: arrayMove(f.images, oldIndex, newIndex) }
+    })
+  }
+
+  const removeImage = (idx: number) =>
+    setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }))
+
+  const makeMain = (idx: number) =>
+    setForm((f) => {
+      const imgs = [...f.images]
+      const [picked] = imgs.splice(idx, 1)
+      return { ...f, images: [picked, ...imgs] }
+    })
+
+  const setImageAlt = (idx: number, altText: string) =>
+    setForm((f) => ({ ...f, images: f.images.map((img, i) => (i === idx ? { ...img, altText } : img)) }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -132,9 +187,9 @@ export default function ProductForm({ product }: Props) {
         stock: parseInt(form.stock) || 0,
         brandId: form.brandId || null,
         categoryIds: form.categoryIds,
-        images: form.imageUrl
-          ? [{ imageUrl: form.imageUrl, altText: form.imageAlt || null, sortOrder: 0, id: form.imageId || undefined }]
-          : [],
+        images: form.images.map((img, i) => ({
+          imageUrl: img.imageUrl, altText: img.altText || null, sortOrder: i, id: img.id || undefined,
+        })),
       }
 
       const url = product ? `/api/admin/products/${product.id}` : '/api/admin/products'
@@ -263,25 +318,46 @@ export default function ProductForm({ product }: Props) {
       </div>
 
       <div>
-        <label className="block text-sm text-gray-400 mb-1">Image</label>
+        <label className="block text-sm text-gray-400 mb-1">Images {form.images.length > 0 && <span className="text-gray-500">(drag to reorder, first = main)</span>}</label>
         <div className="flex items-center gap-4">
-          <input ref={fileRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+          <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
           <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-            className="px-4 py-2 border border-hotwheels-gray rounded text-sm text-gray-300 hover:border-hotwheels-red disabled:opacity-50">
-            {uploading ? 'Uploading...' : 'Upload Image'}
+            className="px-4 py-2 border border-hotwheels-gray rounded text-sm text-gray-300 hover:border-hotwheels-red disabled:opacity-50 flex items-center gap-2">
+            {uploading && (
+              <svg className="animate-spin h-4 w-4 text-hotwheels-yellow" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+            )}
+            {uploading ? `Uploading ${pending.length}...` : 'Upload Images'}
           </button>
-          {form.imageUrl && (
-            <div className="flex items-center gap-2">
-              <img src={form.imageUrl} alt="" className="h-12 w-12 object-cover rounded" />
-              <button type="button" onClick={() => setForm((f) => ({ ...f, imageUrl: '', imageId: '' }))} className="text-red-400 text-xs hover:underline">Remove</button>
-            </div>
-          )}
         </div>
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Alt Text</label>
-          <input type="text" value={form.imageAlt} onChange={(v) => set('imageAlt', v.target.value)} placeholder="Image description"
-            className="w-full px-3 py-2 rounded bg-hotwheels-black text-white border border-hotwheels-gray focus:border-hotwheels-red outline-none text-sm" />
-        </div>
+        {(form.images.length > 0 || pending.length > 0) && (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleImageDragEnd}>
+            <SortableContext items={form.images.map((img) => img.imageUrl)} strategy={rectSortingStrategy}>
+              <div className="grid grid-cols-4 gap-2 mt-3">
+                {form.images.map((img, idx) => (
+                  <SortableImageTile key={img.imageUrl} id={img.imageUrl} index={idx}
+                    imageUrl={img.imageUrl} altText={img.altText || ''}
+                    onRemove={() => removeImage(idx)} onMakeMain={() => makeMain(idx)}
+                    onAlt={(v) => setImageAlt(idx, v)} />
+                ))}
+                {pending.map((p) => (
+                  <div key={p.key} className="relative rounded overflow-hidden border border-hotwheels-gray animate-pulse">
+                    <img src={p.preview} alt={p.name} className="h-20 w-full object-cover opacity-60" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                      <svg className="animate-spin h-6 w-6 text-hotwheels-yellow" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                      </svg>
+                    </div>
+                    <div className="px-1 py-1 bg-hotwheels-black text-[11px] text-gray-400 truncate">{p.name}</div>
+                  </div>
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        )}
       </div>
 
       <label className="flex items-center gap-2 text-sm">
@@ -349,5 +425,29 @@ export default function ProductForm({ product }: Props) {
         </div>
       )}
     </form>
+  )
+}
+
+function SortableImageTile({ id, index, imageUrl, altText, onRemove, onMakeMain, onAlt }: {
+  id: string; index: number; imageUrl: string; altText: string;
+  onRemove: () => void; onMakeMain: () => void; onAlt: (v: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  return (
+    <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+      className="relative group rounded overflow-hidden border border-hotwheels-gray bg-hotwheels-black">
+      <div className="relative">
+        <img src={imageUrl} alt="" className="h-20 w-full object-cover" />
+        <span {...attributes} {...listeners} title="Drag to reorder" style={{ touchAction: 'none' }}
+          className="absolute top-1 right-1 cursor-grab active:cursor-grabbing bg-black/70 text-gray-200 text-xs px-1.5 py-0.5 rounded select-none">⠿</span>
+        {index === 0 && <span className="absolute top-1 left-1 bg-hotwheels-yellow text-black text-[10px] font-bold px-1.5 py-0.5 rounded">MAIN</span>}
+      </div>
+      <div className="flex items-center justify-between px-1 py-1">
+        <button type="button" onClick={onRemove} className="text-red-400 text-[11px] hover:underline">Remove</button>
+        {index !== 0 && <button type="button" onClick={onMakeMain} className="text-gray-300 text-[11px] hover:underline">Main</button>}
+      </div>
+      <input type="text" value={altText} onChange={(v) => onAlt(v.target.value)} placeholder="Alt text"
+        className="w-full px-1.5 py-1 bg-hotwheels-black text-white border-t border-hotwheels-gray outline-none text-[11px]" />
+    </div>
   )
 }
