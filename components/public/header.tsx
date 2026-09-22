@@ -8,28 +8,47 @@ import { useRouter } from 'next/navigation'
 import { useCart } from '@/lib/cart-context'
 import { buildWhatsAppLink } from '@/lib/whatsapp'
 
-const navigation = [
-  { name: 'Home', href: '/' },
-  {
-    name: 'Shop',
-    href: '/catalog',
-    children: [
-      { name: 'All Products', href: '/catalog' },
-      { name: 'New Arrivals', href: '/catalog?sort=newest' },
-      { name: 'Pre Orders', href: '/catalog?orderType=PRE_ORDER' },
-    ],
-  },
-  { name: 'Brands', href: '/catalog?view=brands' },
-  { name: 'New Arrivals', href: '/catalog' },
-  { name: 'Pre Orders', href: '/catalog?orderType=PRE_ORDER' },
-  { name: 'Contact', href: '#contact' },
-]
+interface NavChild {
+  name: string
+  href: string
+}
+
+interface NavItem {
+  name: string
+  href: string
+  children?: NavChild[]
+}
 
 interface HeaderProps {
   whatsappNumber?: string
+  categories?: Array<{ name: string; slug: string }>
 }
 
-export default function Header({ whatsappNumber = '' }: HeaderProps) {
+export default function Header({ whatsappNumber = '', categories = [] }: HeaderProps) {
+  const navigation: NavItem[] = [
+    { name: 'Home', href: '/' },
+    {
+      name: 'Shop',
+      href: '/catalog',
+      children: [
+        { name: 'All Products', href: '/catalog' },
+        { name: 'New Arrivals', href: '/catalog?sort=newest' },
+        { name: 'Pre Orders', href: '/catalog?orderType=PRE_ORDER' },
+      ],
+    },
+    {
+      name: 'Categories',
+      href: '/catalog',
+      children: [
+        { name: 'All Categories', href: '/catalog' },
+        ...categories.map((c) => ({ name: c.name, href: `/catalog?category=${c.slug}` })),
+      ],
+    },
+    { name: 'Brands', href: '/catalog?view=brands' },
+    { name: 'New Arrivals', href: '/catalog' },
+    { name: 'Pre Orders', href: '/catalog?orderType=PRE_ORDER' },
+    { name: 'Contact', href: '#contact' },
+  ]
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
@@ -113,6 +132,7 @@ export default function Header({ whatsappNumber = '' }: HeaderProps) {
                     <Link
                       key={child.name}
                       href={child.href}
+                      onClick={() => setOpenDropdown(null)}
                       className="block px-4 py-2 text-sm text-gray-300 hover:text-[#D4A843] hover:bg-hotwheels-black transition-colors"
                     >
                       {child.name}
@@ -224,20 +244,35 @@ export default function Header({ whatsappNumber = '' }: HeaderProps) {
           </div>
         </form>
 
-        <nav className="flex-1 flex flex-col justify-center gap-2 max-w-md mx-auto w-full">
+        <nav className="flex-1 flex flex-col justify-center gap-2 max-w-md mx-auto w-full overflow-y-auto">
           {navigation.map((item) => {
             const href = item.name === 'Contact' && whatsappNumber
               ? buildWhatsAppLink(whatsappNumber)
               : item.href
             return (
-            <Link
-              key={item.name}
-              href={href}
-              className="block rounded-lg px-4 py-4 text-center text-lg font-semibold text-white hover:bg-hotwheels-black transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              {item.name}
-            </Link>
+            <div key={item.name}>
+              <Link
+                href={href}
+                className="block rounded-lg px-4 py-3 text-center text-lg font-semibold text-white hover:bg-hotwheels-black transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.name}
+              </Link>
+              {item.children && (
+                <div className="flex flex-wrap justify-center gap-2 px-4 pb-2">
+                  {item.children.map((child) => (
+                    <Link
+                      key={child.name}
+                      href={child.href}
+                      className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-gray-300 hover:text-[#D4A843] hover:border-[#D4A843]/50 transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {child.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           )})}
           <Link
             href="/cart"
