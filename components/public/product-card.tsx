@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Product } from '@prisma/client'
@@ -20,7 +21,20 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
-  const mainImage = product.images[0]
+  const images = product.images || []
+  const [idx, setIdx] = useState(0)
+  const [isVisible, setIsVisible] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  const ref = useRef<HTMLElement>(null)
+  const touchX = useRef<number | null>(null)
+  const mouseX = useRef<number | null>(null)
+  const justDragged = useRef(false)
+  const pauseUntil = useRef(0)
+  const [touching, setTouching] = useState(false)
+  const mainImage = images[idx] || images[0]
+
+  const poke = () => { pauseUntil.current = Date.now() + 6000 }
+  const go = (dir: 1 | -1) => { poke(); setIdx((i) => (i + dir + images.length) % images.length) }
   const hasDiscount = product.offerPrice != null && product.price != null && product.offerPrice < product.price
   const discountPct = hasDiscount ? Math.round(((product.price! - product.offerPrice!) / product.price!) * 100) : 0
   const isSoldOut = product.status === 'SOLD_OUT'
@@ -42,8 +56,27 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     })
   }
 
+  // ponytail: auto-cycle images only while card visible, pause on hover + reduced-motion
+  useEffect(() => {
+    const el = ref.current
+    if (!el || images.length < 2) return
+    const obs = new IntersectionObserver(([e]) => setIsVisible(e.isIntersecting), { threshold: 0.5 })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [images.length])
+
+  useEffect(() => {
+    if (!isVisible || isHovered || touching || images.length < 2) return
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const t = setInterval(() => {
+      if (Date.now() < pauseUntil.current) return
+      setIdx((i) => (i + 1) % images.length)
+    }, 2500)
+    return () => clearInterval(t)
+  }, [isVisible, isHovered, touching, images.length])
+
   return (
-    <article className={`group relative flex flex-col h-full rounded-lg overflow-hidden border transition-all duration-300 animate-fade-in ${
+    <article ref={ref} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className={`group relative flex flex-col h-full rounded-lg overflow-hidden border transition-all duration-300 animate-fade-in ${
       isPreOrder
         ? 'bg-[#1A1A1A] border-hotwheels-yellow/30 hover:border-hotwheels-yellow/60'
         : 'bg-[#1A1A1A] border-[#2D2D2D] hover:border-hotwheels-red/50 hover:shadow-[0_0_20px_rgba(230,0,0,0.3)]'
@@ -51,23 +84,51 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       {/* Gloss sheen overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-10" />
 
-      <Link href={`/product/${product.slug}`} onClick={trackProductClick}>
-        <figure className="aspect-square relative bg-hotwheels-black overflow-hidden">
-          {mainImage ? (
-            <Image
-              src={mainImage.imageUrl}
-              alt={mainImage.altText || product.title}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
-              priority={priority}
-            />
+      <div className="relative">
+      <Link href={`/product/${product.slug}`} onClick={trackProductClick}
+        onClickCapture={(e) => { if (justDragged.current) { e.preventDefault(); justDragged.current = false } }}>
+        <figure className="aspect-square relative bg-hotwheels-black overflow-hidden select-none"
+          onTouchStart={(e) => { setTouching(true); touchX.current = e.touches[0].clientX }}
+          onTouchEnd={(e) => {
+            setTouching(false)
+            if (touchX.current == null || images.length < 2) return
+            const dx = e.changedTouches[0].clientX - touchX.current
+            touchX.current = null
+            if (Math.abs(dx) < 40) return
+            go(dx < 0 ? 1 : -1)
+          }}
+          onMouseDown={(e) => { if (e.button === 0 && images.length > 1) mouseX.current = e.clientX }}
+          onMouseUp={(e) => {
+            if (mouseX.current == null || images.length < 2) return
+            const dx = e.clientX - mouseX.current
+            mouseX.current = null
+            if (Math.abs(dx) < 40) return
+            justDragged.current = true
+            go(dx < 0 ? 1 : -1)
+          }}
+          onMouseLeave={() => { mouseX.current = null }}>
+          {images.length ? (
+            <div className="absolute inset-0 flex transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={{ transform: `translateX(-${idx * 100}%)` }}>
+              {images.map((img, i) => (
+                <div key={img.imageUrl + i} className="relative w-full h-full flex-shrink-0">
+                  <Image
+                    src={img.imageUrl}
+                    alt={img.altText || product.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
+                    priority={priority && i === 0}
+                    draggable={false}
+                  />
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="w-full h-full bg-hotwheels-black flex items-center justify-center">
               <span className="text-gray-500">No image</span>
             </div>
           )}
-
           {/* Status Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1 max-w-[55%] z-20">
             {isPreOrder && (
@@ -102,6 +163,28 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-4 bg-black/40 blur-xl rounded-[100%]" />
         </figure>
       </Link>
+      {images.length > 1 && (
+        <>
+          <button type="button" aria-label="Previous image"
+            onClick={(e) => { e.stopPropagation(); go(-1) }}
+            className="absolute left-2.5 top-[calc(50%-1rem)] z-20 h-9 w-9 rounded-full bg-black/55 text-white backdrop-blur-md border border-white/15 shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all duration-200 hover:bg-black/85 hover:scale-105 active:scale-95">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+          </button>
+          <button type="button" aria-label="Next image"
+            onClick={(e) => { e.stopPropagation(); go(1) }}
+            className="absolute right-2.5 top-[calc(50%-1rem)] z-20 h-9 w-9 rounded-full bg-black/55 text-white backdrop-blur-md border border-white/15 shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all duration-200 hover:bg-black/85 hover:scale-105 active:scale-95">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
+          <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 bg-black/45 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/10">
+            {images.map((_, i) => (
+              <button key={i} type="button" aria-label={`View image ${i + 1}`}
+                onClick={(e) => { e.stopPropagation(); poke(); setIdx(i) }}
+                className={`h-1.5 rounded-full transition-all duration-300 ${i === idx ? 'bg-white w-5' : 'bg-white/40 w-1.5 hover:bg-white/70'}`} />
+            ))}
+          </div>
+        </>
+      )}
+      </div>
 
       <div className="p-4 flex-1 flex flex-col relative z-20">
         {/* Brand */}
