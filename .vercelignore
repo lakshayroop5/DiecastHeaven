@@ -1,4 +1,5 @@
 .codegraph/
+.codegraph
 .agents/
 .claude/
 .playwright-mcp/
@@ -8,3 +9,6 @@ prisma/check-featured.ts
 prisma/revalidate-call.ts
 .gitignore
 tsconfig.tsbuildinfo
+.env
+.env.local
+.env.production.local
