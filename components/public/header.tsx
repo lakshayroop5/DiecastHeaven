@@ -50,6 +50,7 @@ export default function Header({ whatsappNumber = '', categories = [] }: HeaderP
     { name: 'Contact', href: '#contact' },
   ]
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -244,28 +245,40 @@ export default function Header({ whatsappNumber = '', categories = [] }: HeaderP
           </div>
         </form>
 
-        <nav className="flex-1 flex flex-col justify-center gap-2 max-w-md mx-auto w-full overflow-y-auto">
+        <nav className="flex-1 flex flex-col gap-2 max-w-md mx-auto w-full overflow-y-auto py-2">
           {navigation.map((item) => {
             const href = item.name === 'Contact' && whatsappNumber
               ? buildWhatsAppLink(whatsappNumber)
               : item.href
+            const expanded = mobileExpanded === item.name
             return (
             <div key={item.name}>
-              <Link
-                href={href}
-                className="block rounded-lg px-4 py-3 text-center text-lg font-semibold text-white hover:bg-hotwheels-black transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-              {item.children && (
-                <div className="flex flex-wrap justify-center gap-2 px-4 pb-2">
+              {item.children ? (
+                <button
+                  type="button"
+                  onClick={() => setMobileExpanded(expanded ? null : item.name)}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-center text-lg font-semibold text-white hover:bg-hotwheels-black transition-colors"
+                >
+                  {item.name}
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
+                </button>
+              ) : (
+                <Link
+                  href={href}
+                  className="block rounded-lg px-4 py-3 text-center text-lg font-semibold text-white hover:bg-hotwheels-black transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              )}
+              {item.children && expanded && (
+                <div className="flex flex-wrap justify-center gap-2 px-4 pt-2 pb-3">
                   {item.children.map((child) => (
                     <Link
                       key={child.name}
                       href={child.href}
                       className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-gray-300 hover:text-[#D4A843] hover:border-[#D4A843]/50 transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={() => { setMobileMenuOpen(false); setMobileExpanded(null) }}
                     >
                       {child.name}
                     </Link>
