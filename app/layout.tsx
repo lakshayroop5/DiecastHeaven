@@ -7,6 +7,10 @@ import PageLoader from '@/components/page-loader'
 export const metadata: Metadata = {
   title: process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven Udaipur',
   description: process.env.DEFAULT_HERO_SUBTITLE || "India's Premium Diecast Destination",
+  icons: {
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    apple: '/diecast-heaven-logo.png',
+  },
 }
 
 export default function RootLayout({
