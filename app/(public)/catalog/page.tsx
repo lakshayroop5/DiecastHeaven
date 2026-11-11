@@ -2,6 +2,7 @@ import { getCategories, getBrands, getCatalogProducts } from '@/lib/queries'
 import ProductGrid from '@/components/public/product-grid'
 import CatalogFilters from '@/components/public/catalog-filters'
 import CatalogEventTracker from '@/components/analytics/catalog-event-tracker'
+import type { Metadata } from 'next'
 
 interface CatalogPageProps {
   searchParams: Promise<{
@@ -14,6 +15,12 @@ interface CatalogPageProps {
 }
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Catalog',
+  description: 'Browse diecast collector cars at Diecast Heaven Udaipur.',
+  alternates: { canonical: '/catalog' },
+}
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const params = await searchParams
@@ -38,7 +45,8 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       <CatalogEventTracker search={search} category={category} brand={brand} orderType={orderType} />
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-hotwheels-white mb-4">
+          <p className="text-[11px] font-black uppercase tracking-[0.25em] text-gray-500 font-mono mb-1">TIMING SCREEN // QUALIFYING</p>
+          <h1 className="text-3xl font-black uppercase italic text-hotwheels-white mb-4">
             {search
               ? `Search: "${search}"`
               : showBrandView

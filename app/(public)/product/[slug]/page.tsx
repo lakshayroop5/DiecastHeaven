@@ -24,16 +24,32 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     return { title: 'Product Not Found' }
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.diecastheavenudaipur.in'
+  const canonical = `${baseUrl}/product/${slug}`
+  const description =
+    product.shortDesc ||
+    product.description?.substring(0, 160) ||
+    'Diecast collector car'
+  const abs = (u?: string | null) =>
+    u ? (u.startsWith('http') ? u : `${baseUrl}${u.startsWith('/') ? '' : '/'}${u}`) : undefined
+  const ogImage = abs(product.images[0]?.imageUrl)
+
   return {
-    title: `${product.title} | ${process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven Udaipur'}`,
-    description:
-      product.shortDesc ||
-      product.description?.substring(0, 160) ||
-      'Diecast collector car',
+    title: product.title,
+    description,
+    alternates: { canonical },
     openGraph: {
-      images: product.images[0]?.imageUrl
-        ? [product.images[0].imageUrl]
-        : undefined,
+      title: product.title,
+      description,
+      url: canonical,
+      type: 'website',
+      images: ogImage ? [ogImage] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.title,
+      description,
+      images: ogImage ? [ogImage] : undefined,
     },
   }
 }
@@ -72,8 +88,56 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const hasDiscount = product.offerPrice != null && product.price != null && product.offerPrice < product.price
   const discountPct = hasDiscount ? Math.round(((product.price! - product.offerPrice!) / product.price!) * 100) : 0
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.diecastheavenudaipur.in'
+  const canonical = `${baseUrl}/product/${slug}`
+  const abs = (u?: string | null) =>
+    u ? (u.startsWith('http') ? u : `${baseUrl}${u.startsWith('/') ? '' : '/'}${u}`) : undefined
+  const seoDescription =
+    product.shortDesc ||
+    product.description?.substring(0, 160) ||
+    'Diecast collector car'
+  const imageUrls = product.images
+    .map((img) => abs(img.imageUrl))
+    .filter((u): u is string => !!u)
+  const effectivePrice = product.offerPrice ?? product.price
+  const productJsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: seoDescription,
+    url: canonical,
+    ...(imageUrls.length > 0 ? { image: imageUrls } : {}),
+    ...(product.brand ? { brand: { '@type': 'Brand', name: product.brand.name } } : {}),
+    ...(effectivePrice != null
+      ? {
+          offers: {
+            '@type': 'Offer',
+            price: effectivePrice,
+            priceCurrency: 'INR',
+            itemCondition: 'https://schema.org/NewCondition',
+            availability:
+              product.status === 'SOLD_OUT'
+                ? 'https://schema.org/OutOfStock'
+                : 'https://schema.org/InStock',
+            url: canonical,
+          },
+        }
+      : {}),
+  }
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: baseUrl },
+      { '@type': 'ListItem', position: 2, name: 'Catalog', item: `${baseUrl}/catalog` },
+      { '@type': 'ListItem', position: 3, name: product.title, item: canonical },
+    ],
+  }
+
   return (
     <div className="min-h-screen bg-hotwheels-black">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <ProductViewTracker
         product={{
           id: product.id,
@@ -87,12 +151,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
       />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:py-12 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
-        <nav className="mb-4 sm:mb-6 text-xs sm:text-sm text-gray-400">
-          <Link href="/" className="hover:text-hotwheels-white transition-colors">Home</Link>
-          <span className="mx-2">/</span>
-          <Link href="/catalog" className="hover:text-hotwheels-white transition-colors">Catalog</Link>
-          <span className="mx-2">/</span>
-          <span className="text-hotwheels-white">{product.title}</span>
+        <nav aria-label="Breadcrumb" className="mb-4 sm:mb-6 text-xs sm:text-sm text-gray-400">
+          <ol className="flex items-center">
+            <li>
+              <Link href="/" className="hover:text-hotwheels-white transition-colors">Home</Link>
+            </li>
+            <li><span className="mx-2">/</span></li>
+            <li>
+              <Link href="/catalog" className="hover:text-hotwheels-white transition-colors">Catalog</Link>
+            </li>
+            <li><span className="mx-2">/</span></li>
+            <li><span className="text-hotwheels-white">{product.title}</span></li>
+          </ol>
         </nav>
 
         <div className="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:items-start">
@@ -101,6 +171,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           {/* Product Details */}
           <div className="mt-6 sm:mt-10 lg:mt-0 lg:pl-8">
+            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.25em] text-gray-500 font-mono">PARC-FERMÉ // TECH SHEET</p>
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-3">
               {product.brand && (
@@ -143,7 +214,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
             )}
 
             {/* Price */}
-            <div className="mt-4 sm:mt-6 flex items-baseline gap-3 flex-wrap">
+            <p className="mt-4 text-[11px] font-black uppercase tracking-[0.25em] text-gray-500 font-mono">LAP TIME // PRICE</p>
+            <div className="mt-1 sm:mt-2 flex items-baseline gap-3 flex-wrap">
               {product.offerPrice != null && (
                 <span className="text-2xl sm:text-3xl font-bold text-hotwheels-yellow">
                   {formatPrice(product.offerPrice)}
@@ -181,8 +253,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             {/* Pre-Order Deposit Note */}
             {product.orderType === 'PRE_ORDER' && product.depositAmount != null && (
-              <div className="mt-4 p-3 rounded bg-hotwheels-yellow/10 border border-hotwheels-yellow/30 text-sm text-hotwheels-yellow">
-                Pay {formatPrice(product.depositAmount)} deposit now — balance on delivery.
+              <div className="mt-4 p-3 rounded-sm bg-hotwheels-yellow/10 border border-hotwheels-yellow/30 border-l-4 border-l-hotwheels-red text-sm text-hotwheels-yellow">
+                <span className="font-black uppercase tracking-widest text-[11px] font-mono">PIT-STOP // </span>Pay {formatPrice(product.depositAmount)} deposit now — balance on delivery.
               </div>
             )}
 

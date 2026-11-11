@@ -20,15 +20,15 @@ export default function CatalogFilters({ categories, brands, showBrandView, acti
   const FilterBody = (
     <div className="space-y-4">
       <div>
-        <h2 className="text-sm font-semibold text-hotwheels-yellow mb-2">Type</h2>
+        <h2 className="text-xs font-black uppercase tracking-[0.25em] text-hotwheels-yellow mb-2 font-mono">PIT WALL // TYPE</h2>
         <PillFilter items={[{ id: 'RTD', name: 'RTD', slug: 'RTD' }, { id: 'PRE_ORDER', name: 'Pre-Order', slug: 'PRE_ORDER' }]} param="orderType" />
       </div>
       <div>
-        <h2 className="text-sm font-semibold text-hotwheels-yellow mb-2">Categories</h2>
+        <h2 className="text-xs font-black uppercase tracking-[0.25em] text-hotwheels-yellow mb-2 font-mono">PIT WALL // CATEGORIES</h2>
         <PillFilter items={categories} param="category" />
       </div>
       <div>
-        <h2 className="text-sm font-semibold text-hotwheels-yellow mb-2">Brands</h2>
+        <h2 className="text-xs font-black uppercase tracking-[0.25em] text-hotwheels-yellow mb-2 font-mono">PIT WALL // BRANDS</h2>
         {showBrandView ? (
           <PillFilter items={brands} param="brand" layout="grid" />
         ) : (

@@ -2,8 +2,13 @@ import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { decodeCart } from '@/lib/cart-share'
 import { formatPrice } from '@/lib/utils'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default async function SharedCartPage({
   searchParams,
@@ -51,8 +56,9 @@ export default async function SharedCartPage({
   return (
     <div className="min-h-screen bg-hotwheels-black">
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-        <p className="text-xs font-bold uppercase tracking-widest text-hotwheels-yellow mb-2">Shared cart</p>
-        <div className="mb-8 rounded-xl border border-hotwheels-yellow/25 bg-gradient-to-br from-hotwheels-gray to-hotwheels-black p-5 sm:p-6 shadow-[0_0_30px_rgba(230,200,0,0.08)]">
+        <p className="text-[11px] font-black uppercase tracking-[0.25em] text-hotwheels-yellow mb-2 font-mono">SHARED CART // TEAM RADIO</p>
+        <div className="mb-8 rounded-lg border border-hotwheels-yellow/25 bg-gradient-to-br from-hotwheels-gray to-hotwheels-black p-5 sm:p-6 shadow-[0_0_30px_rgba(230,200,0,0.08)] overflow-hidden relative">
+          <div aria-hidden="true" className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundImage: 'repeating-conic-gradient(#fff 0% 25%, #0a0a0a 0% 50%)', backgroundSize: '12px 12px' }} />
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-widest text-gray-400">Total payable</p>
@@ -86,7 +92,7 @@ export default async function SharedCartPage({
             const isDeposit = product.orderType === 'PRE_ORDER' && product.depositAmount != null
             const unit = isDeposit ? product.depositAmount! : product.offerPrice ?? product.price ?? 0
             return (
-              <div key={product.id} className="flex items-center gap-3 bg-hotwheels-gray rounded-lg p-3 border border-hotwheels-black">
+              <div key={product.id} className="flex items-center gap-3 bg-hotwheels-gray rounded-2xl p-3 border border-[#2D2D2D] shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:border-hotwheels-red/30">
                 <Link href={`/product/${product.slug}`} className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-hotwheels-black flex-shrink-0">
                   {product.images[0] ? (
                     <img src={product.images[0].imageUrl} alt={product.title} className="absolute inset-0 w-full h-full object-cover" />

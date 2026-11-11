@@ -97,12 +97,13 @@ export default function CartPage() {
               <ArrowLeft className="h-4 w-4" />
               Continue Shopping
             </Link>
-            <h1 className="text-3xl font-bold text-hotwheels-white">
-              Your Cart
-              <span className="text-gray-500 text-lg font-normal ml-2">
+            <h1 className="text-3xl font-black uppercase italic text-hotwheels-white">
+              PIT WALL
+              <span className="text-gray-500 text-lg font-mono font-bold not-italic ml-2">
                 ({totalItems} item{totalItems !== 1 ? 's' : ''})
               </span>
             </h1>
+            <p className="mt-1 text-[11px] font-black uppercase tracking-[0.25em] text-gray-500 font-mono">FUEL LOAD // RACE STRATEGY</p>
           </div>
           <button
             onClick={clearCart}
@@ -124,10 +125,10 @@ export default function CartPage() {
               return (
                 <div
                   key={item.id}
-                  className={`flex gap-4 bg-hotwheels-gray rounded-lg p-4 border ${
+                  className={`flex gap-4 bg-hotwheels-gray rounded-2xl p-4 border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] ${
                     isItemPreOrder
-                      ? 'border-hotwheels-yellow/30'
-                      : 'border-hotwheels-black'
+                      ? 'border-hotwheels-yellow/30 hover:border-hotwheels-yellow/50 hover:shadow-[0_8px_24px_rgba(250,204,21,0.12)]'
+                      : 'border-hotwheels-black hover:border-hotwheels-red/30'
                   }`}
                 >
                   {/* Image */}
@@ -228,14 +229,15 @@ export default function CartPage() {
 
           {/* Order Summary */}
           <div className="mt-8 lg:mt-0">
-            <div className="bg-hotwheels-gray rounded-lg p-6 border border-hotwheels-black sticky top-24">
-              <h2 className="text-lg font-bold text-hotwheels-white mb-4">
-                Order Summary
+            <div className="bg-hotwheels-gray rounded-lg p-6 border border-[#2D2D2D] shadow-[0_8px_32px_rgba(0,0,0,0.5)] sticky top-24 overflow-hidden">
+              <div aria-hidden="true" className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundImage: 'repeating-conic-gradient(#fff 0% 25%, #0a0a0a 0% 50%)', backgroundSize: '12px 12px' }} />
+              <h2 className="text-lg font-black uppercase italic text-hotwheels-white mb-1 mt-1">
+                PIT WALL <span className="text-hotwheels-red not-italic">//</span> SUMMARY
               </h2>
 
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-gray-300">
-                  <span>Items ({totalItems})</span>
+                <div className="flex justify-between text-gray-300 font-mono">
+                  <span className="uppercase text-xs tracking-widest">FUEL LOAD ({totalItems})</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-gray-300">
@@ -271,9 +273,9 @@ export default function CartPage() {
               <button
                 onClick={handleCheckout}
                 disabled={checkingOut}
-                className="mt-6 w-full rounded-md bg-hotwheels-red px-5 py-3 text-sm font-bold text-white hover:bg-red-700 transition-colors disabled:opacity-60"
+                className="btn-shine mt-6 w-full rounded-sm bg-hotwheels-red px-5 py-3 text-sm font-black uppercase tracking-widest font-mono text-white hover:bg-red-600 transition-all duration-200 hover:-translate-y-px active:translate-y-0 shadow-lg shadow-red-950/50 hover:shadow-[0_0_24px_rgba(230,0,0,0.55)] disabled:opacity-60 border-b-2 border-hotwheels-yellow"
               >
-                {checkingOut ? 'Opening WhatsApp...' : 'Checkout via WhatsApp'}
+                {checkingOut ? 'OPENING WHATSAPP...' : 'CHEQUERED // CHECKOUT VIA WHATSAPP'}
               </button>
 
               <p className="mt-3 text-xs text-gray-500 text-center">

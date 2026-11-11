@@ -87,7 +87,8 @@ export default function Header({ whatsappNumber = '', categories = [] }: HeaderP
 
   return (
     <>
-    <header className="bg-hotwheels-black/90 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
+    <header className="race-carbon bg-hotwheels-black/85 backdrop-blur-xl border-b border-[#D4A843]/15 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.8)] sticky top-0 z-50">
+      <div className="h-0.5 bg-gradient-to-r from-apex-redline via-red-500 to-apex-redline" aria-hidden="true" />
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8">
         {/* Logo */}
         <div className="flex lg:flex-1">
@@ -100,6 +101,15 @@ export default function Header({ whatsappNumber = '', categories = [] }: HeaderP
               priority
               className="h-16 w-auto object-contain flex-shrink-0"
             />
+            <span className="hidden sm:flex flex-col leading-none">
+              <span className="text-sm font-black italic uppercase tracking-tight text-white">
+                Diecast <span className="text-apex-redline">Heaven</span> Udaipur
+              </span>
+              <span className="mt-1 inline-flex w-fit items-center gap-1 rounded bg-apex-redline/15 border border-apex-redline/40 px-1.5 py-0.5 text-[9px] font-bold uppercase italic tracking-[0.18em] text-red-300">
+                <span className="h-1 w-1 rounded-full bg-apex-redline animate-pulse" />
+                Live Timing
+              </span>
+            </span>
           </Link>
         </div>
 
@@ -118,7 +128,7 @@ export default function Header({ whatsappNumber = '', categories = [] }: HeaderP
             >
               <Link
                 href={href}
-                className={`text-sm font-medium transition-colors inline-flex items-center gap-1 ${
+                className={`nav-spotlight text-sm font-medium transition-colors inline-flex items-center gap-1 ${
                   item.name === 'Home'
                     ? 'text-[#D4A843] border-b-2 border-[#D4A843] pb-0.5'
                     : 'text-white hover:text-[#D4A843]'
@@ -128,7 +138,7 @@ export default function Header({ whatsappNumber = '', categories = [] }: HeaderP
                 {item.children && <ChevronDown className="w-3 h-3" />}
               </Link>
               {item.children && openDropdown === item.name && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-hotwheels-gray border border-white/10 rounded-lg shadow-xl py-2 z-50">
+                <div className="absolute top-full left-0 mt-2 w-52 bg-hotwheels-gray/95 backdrop-blur-xl border border-[#D4A843]/20 rounded-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] py-2 z-50 overflow-hidden">
                   {item.children.map((child) => (
                     <Link
                       key={child.name}

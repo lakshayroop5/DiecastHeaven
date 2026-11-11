@@ -122,13 +122,30 @@ export default function ProductGrid({
 
   return (
     <div>
+      <div className="mb-5 flex items-center justify-between border border-[#2D2D2D] bg-[#141414] px-4 py-2.5 rounded-lg">
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-white font-mono">
+          RESULTS <span className="text-hotwheels-red">//</span> SECTOR 3
+        </p>
+        <p className="flex items-center gap-2 text-xs font-mono font-bold text-gray-400">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+          </span>
+          {total} ON GRID
+        </p>
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product, index) => (
-          <ProductCard
+          <div
             key={product.id}
-            product={product}
-            priority={index < 3}
-          />
+            className="animate-fade-in"
+            style={{ animationDelay: `${Math.min(index % 12, 9) * 60}ms` }}
+          >
+            <ProductCard
+              product={product}
+              priority={index < 3}
+            />
+          </div>
         ))}
       </div>
 

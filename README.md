@@ -1,10 +1,10 @@
-# Hot Wheels Collector - Catalog Site
+# Diecast Heaven Udaipur - Catalog Site
 
-A Next.js public website for showcasing Hot Wheels diecast collector cars. Built with server-side rendering, Prisma ORM, and WhatsApp integration for inquiries.
+A Next.js public website for Diecast Heaven Udaipur showcasing premium diecast collector cars. Built with server-side rendering, Prisma ORM, and WhatsApp integration for inquiries.
 
 ## Features
 
-- **Catalog browsing** - Filter and search published Hot Wheels products
+- **Catalog browsing** - Filter and search published diecast products
 - **Product details** - SEO-friendly slug pages with image galleries
 - **WhatsApp integration** - Click-to-chat for product inquiries
 - **Responsive design** - Mobile-first with Tailwind CSS

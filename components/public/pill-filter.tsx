@@ -22,13 +22,13 @@ export default function PillFilter({ items, param, layout = 'row' }: {
 
   if (layout === 'grid') {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
         {[{ id: 'all', name: 'All Brands', slug: 'all' }, ...items].map((item) => (
           <button key={item.id} onClick={() => handleChange(item.slug)}
-            className={`rounded-lg p-4 text-center transition-colors border ${
+            className={`rounded-sm px-3 py-2.5 text-center text-xs font-black uppercase tracking-widest font-mono transition-all border-b-2 ${
               selected === item.slug
-                ? 'bg-hotwheels-red text-white border-hotwheels-red'
-                : 'bg-hotwheels-gray text-gray-300 border-hotwheels-gray hover:border-hotwheels-red'
+                ? 'bg-hotwheels-red text-white border-hotwheels-yellow shadow-[0_4px_16px_rgba(230,0,0,0.4)]'
+                : 'bg-[#141414] text-gray-300 border-transparent border border-[#2D2D2D] hover:border-hotwheels-red/60 hover:text-white'
             }`}>
             {item.name}
           </button>
@@ -40,19 +40,19 @@ export default function PillFilter({ items, param, layout = 'row' }: {
   return (
     <div className="flex flex-wrap gap-2">
       <button onClick={() => handleChange('all')}
-        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+        className={`px-4 py-2 rounded-sm text-xs font-black uppercase tracking-widest font-mono transition-all border-b-2 ${
           selected === 'all'
-            ? param === 'brand' ? 'bg-hotwheels-yellow text-hotwheels-black' : 'bg-hotwheels-red text-white'
-            : 'bg-hotwheels-gray text-gray-300 hover:bg-hotwheels-black hover:text-hotwheels-white'
+            ? param === 'brand' ? 'bg-hotwheels-yellow text-hotwheels-black border-hotwheels-red' : 'bg-hotwheels-red text-white border-hotwheels-yellow shadow-[0_4px_16px_rgba(230,0,0,0.4)]'
+            : 'bg-[#141414] text-gray-300 border-transparent border border-[#2D2D2D] hover:border-hotwheels-red/60 hover:text-white'
         }`}>
         {param === 'brand' ? 'All Brands' : 'All'}
       </button>
       {items.map((item) => (
         <button key={item.id} onClick={() => handleChange(item.slug)}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+          className={`px-4 py-2 rounded-sm text-xs font-black uppercase tracking-widest font-mono transition-all border-b-2 ${
             selected === item.slug
-              ? param === 'brand' ? 'bg-hotwheels-yellow text-hotwheels-black' : 'bg-hotwheels-red text-white'
-              : 'bg-hotwheels-gray text-gray-300 hover:bg-hotwheels-black hover:text-hotwheels-white'
+              ? param === 'brand' ? 'bg-hotwheels-yellow text-hotwheels-black border-hotwheels-red' : 'bg-hotwheels-red text-white border-hotwheels-yellow shadow-[0_4px_16px_rgba(230,0,0,0.4)]'
+              : 'bg-[#141414] text-gray-300 border-transparent border border-[#2D2D2D] hover:border-hotwheels-red/60 hover:text-white'
           }`}>
           {item.name}
         </button>

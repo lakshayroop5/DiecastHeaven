@@ -3,11 +3,14 @@ import { getSiteSettings, getCategories } from '@/lib/queries'
 import Header from '@/components/public/header'
 import Footer from '@/components/public/footer'
 import PageViewTracker from '@/components/analytics/page-view-tracker'
+import SiteSchemas from '@/components/seo/site-schemas'
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings()
   return {
-    title: settings?.businessName || process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven Udaipur',
+    title: {
+      absolute: settings?.businessName || process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven Udaipur',
+    },
     description: settings?.heroSubtitle || process.env.DEFAULT_HERO_SUBTITLE || "India's Premium Diecast Destination",
   }
 }
@@ -20,6 +23,7 @@ export default async function PublicLayout({
   const [settings, categories] = await Promise.all([getSiteSettings(), getCategories()])
   return (
     <>
+      <SiteSchemas />
       <PageViewTracker />
       <Header whatsappNumber={settings?.whatsappNumber} categories={categories} />
       <main className="flex-1">{children}</main>

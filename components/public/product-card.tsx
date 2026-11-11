@@ -75,14 +75,24 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     return () => clearInterval(t)
   }, [isVisible, isHovered, touching, images.length])
 
+  const posNum = (product.id.charCodeAt(product.id.length - 1) % 20) + 1
+  const posLabel = `P${posNum}`
+
   return (
-    <article ref={ref} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className={`group relative flex flex-col h-full rounded-lg overflow-hidden border transition-all duration-300 animate-fade-in ${
+    <article ref={ref} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className={`group relative flex flex-col h-full rounded-lg overflow-hidden border transition-all duration-300 animate-fade-in hover:-translate-y-1.5 hover:[transform:perspective(800px)_rotateX(1.5deg)] ${
       isPreOrder
-        ? 'bg-[#1A1A1A] border-hotwheels-yellow/30 hover:border-hotwheels-yellow/60'
-        : 'bg-[#1A1A1A] border-[#2D2D2D] hover:border-hotwheels-red/50 hover:shadow-[0_0_20px_rgba(230,0,0,0.3)]'
-    }`}>
+        ? 'bg-[#141414] border-hotwheels-yellow/30 hover:border-hotwheels-yellow/60 hover:shadow-[0_12px_32px_rgba(250,204,21,0.18),0_2px_0_rgba(230,0,0,0.8)]'
+        : 'bg-[#141414] border-[#2D2D2D] hover:border-hotwheels-red/60 hover:shadow-[0_12px_32px_rgba(230,0,0,0.35),0_2px_0_rgba(230,0,0,0.9)]'
+    }`} style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px)', backgroundSize: '6px 6px' }}>
+      {/* Chequer top edge — parc-ferme strip, reveals on hover */}
+      <div aria-hidden="true" className="absolute top-0 left-0 right-0 h-1.5 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ backgroundImage: 'repeating-conic-gradient(#fff 0% 25%, #0a0a0a 0% 50%)', backgroundSize: '12px 12px' }} />
       {/* Gloss sheen overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-10" />
+      {/* Headlight sweep on hover */}
+      <div aria-hidden="true" className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
+        <div className="absolute inset-y-0 -left-1/2 w-1/2 rotate-12 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-[350%] transition-transform duration-700 ease-out" />
+      </div>
 
       <div className="relative">
       <Link href={`/product/${product.slug}`} onClick={trackProductClick}
@@ -117,7 +127,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                     alt={img.altText || product.title}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
+                    className="object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-none"
                     priority={priority && i === 0}
                     draggable={false}
                   />
@@ -131,6 +141,9 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           )}
           {/* Status Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1 max-w-[55%] z-20">
+            <span className="self-start bg-hotwheels-black/85 backdrop-blur-md text-hotwheels-yellow border border-hotwheels-yellow/40 text-[10px] sm:text-[11px] font-black px-1.5 sm:px-2 py-0.5 font-mono tracking-widest leading-none">
+              {posLabel}
+            </span>
             {isPreOrder && (
               <span className="bg-hotwheels-yellow text-hotwheels-black text-[9px] sm:text-[11px] font-bold px-1 sm:px-2 py-0.5 sm:py-1 uppercase tracking-widest leading-none">
                 PRE-ORDER
@@ -145,8 +158,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
           {/* Scale pill badge */}
           {product.scale && (
-            <span className="absolute bottom-2 right-2 sm:top-3 sm:bottom-auto sm:right-3 bg-hotwheels-black/80 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full border border-[#2D2D2D] z-20">
-              SCALE {product.scale}
+            <span className="absolute bottom-2 right-2 sm:top-3 sm:bottom-auto sm:right-3 bg-hotwheels-black/85 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded-full border border-white/20 z-20 font-mono tracking-wider">
+              ◉ 1:{product.scale}
             </span>
           )}
 
@@ -189,8 +202,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       <div className="p-4 flex-1 flex flex-col relative z-20">
         {/* Brand */}
         {product.brand && (
-          <p className="text-[11px] font-bold text-hotwheels-yellow uppercase tracking-widest italic mb-1">
-            {product.brand.name}
+          <p className="text-[11px] font-black text-hotwheels-yellow uppercase tracking-[0.2em] italic mb-1 font-mono">
+            <span className="text-gray-500 not-italic font-bold">LIVERY // </span>{product.brand.name}
           </p>
         )}
 
@@ -225,25 +238,26 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         {/* Price Section */}
         <div className="mt-3 flex items-end justify-between border-t border-[#2D2D2D] pt-3">
           <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 font-mono">LAP TIME</span>
             {isPreOrder && product.depositAmount != null ? (
               <>
                 {product.price != null && (
-                  <span className="text-xs text-gray-500 line-through">
+                  <span className="text-xs text-gray-500 line-through font-mono">
                     {formatPrice(product.price)}
                   </span>
                 )}
-                <span className="text-xl font-black text-white leading-none tracking-tighter">
+                <span className="text-2xl font-black text-hotwheels-yellow leading-none tracking-tight font-mono">
                   {formatPrice(product.offerPrice)}
                 </span>
               </>
             ) : (
               <>
                 {hasDiscount && product.price != null && (
-                  <span className="text-xs text-gray-500 line-through">
+                  <span className="text-xs text-gray-500 line-through font-mono">
                     {formatPrice(product.price)}
                   </span>
                 )}
-                <span className="text-xl font-black text-white leading-none tracking-tighter">
+                <span className="text-2xl font-black text-hotwheels-yellow leading-none tracking-tight font-mono">
                   {product.offerPrice != null
                     ? formatPrice(product.offerPrice)
                     : product.price != null
@@ -256,8 +270,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
 
           {isPreOrder && product.depositAmount != null && product.price != null && (
             <div className="text-right">
-              <span className="block text-hotwheels-yellow text-[11px] font-bold uppercase">Deposit</span>
-              <span className="text-white text-sm font-bold">{formatPrice(product.depositAmount)}</span>
+              <span className="block text-hotwheels-yellow text-[10px] font-black uppercase tracking-[0.2em] font-mono">PIT-STOP // DEPOSIT</span>
+              <span className="text-white text-sm font-bold font-mono">{formatPrice(product.depositAmount)}</span>
             </div>
           )}
         </div>
