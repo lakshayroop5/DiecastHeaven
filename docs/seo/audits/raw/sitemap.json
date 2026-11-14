@@ -1,0 +1,131 @@
+{
+  "target": "https://www.diecastheavenudaipur.in",
+  "robots_url": "https://www.diecastheavenudaipur.in/robots.txt",
+  "declared": [
+    {
+      "url": "http://localhost:3000/sitemap.xml",
+      "query_redacted": false
+    }
+  ],
+  "found": [
+    {
+      "url": "https://www.diecastheavenudaipur.in/sitemap.xml",
+      "query_redacted": false,
+      "source": "common_path",
+      "status_code": 200,
+      "kind": "urlset",
+      "valid": true,
+      "error": null
+    }
+  ],
+  "checked": [
+    {
+      "url": "http://localhost:3000/sitemap.xml",
+      "query_redacted": false,
+      "source": "robots.txt",
+      "status_code": null,
+      "kind": null,
+      "valid": false,
+      "error": "URL safety validation failed",
+      "cross_host": true
+    },
+    {
+      "url": "https://www.diecastheavenudaipur.in/sitemap.xml",
+      "query_redacted": false,
+      "source": "common_path",
+      "status_code": 200,
+      "kind": "urlset",
+      "valid": true,
+      "error": null
+    },
+    {
+      "url": "https://www.diecastheavenudaipur.in/sitemap_index.xml",
+      "query_redacted": false,
+      "source": "common_path",
+      "status_code": 404,
+      "kind": null,
+      "valid": false,
+      "error": "HTTP 404"
+    },
+    {
+      "url": "https://www.diecastheavenudaipur.in/sitemap-index.xml",
+      "query_redacted": false,
+      "source": "common_path",
+      "status_code": 404,
+      "kind": null,
+      "valid": false,
+      "error": "HTTP 404"
+    },
+    {
+      "url": "https://www.diecastheavenudaipur.in/wp-sitemap.xml",
+      "query_redacted": false,
+      "source": "common_path",
+      "status_code": 404,
+      "kind": null,
+      "valid": false,
+      "error": "HTTP 404"
+    }
+  ],
+  "warnings": [],
+  "error": null,
+  "expanded": {
+    "files": [
+      {
+        "url": "https://www.diecastheavenudaipur.in/sitemap.xml",
+        "query_redacted": false,
+        "source": "common_path",
+        "status_code": 200,
+        "kind": "urlset",
+        "valid": true,
+        "error": null,
+        "gzip": false,
+        "bytes": 43590,
+        "decompressed_bytes": null,
+        "url_count": 225,
+        "child_count": 0,
+        "invalid_loc_count": 0,
+        "duplicate_count": 0,
+        "lastmod_count": 225,
+        "lastmod_invalid_count": 0,
+        "lastmod_oldest": "2026-11-01T10:15:14.036Z",
+        "lastmod_newest": "2026-11-11T23:31:59.029Z",
+        "lastmod_most_common": "2026-11-01T10:15:14.036Z",
+        "lastmod_identical_share": 0.6933,
+        "cross_host_url_count": 225,
+        "cross_host_url_examples": [
+          "http://localhost:3000/",
+          "http://localhost:3000/catalog",
+          "http://localhost:3000/about",
+          "http://localhost:3000/product/majorette-motorsport-dtm-deluxe-cars-set-of-6-no-single-free-shipping-",
+          "http://localhost:3000/product/porsche-911-gt3-r-2026-gt-world-challenge-asia-mandalika"
+        ],
+        "redacted_url_count": 0,
+        "redacted_url_examples": [],
+        "findings": [],
+        "sample_urls": [
+          "http://localhost:3000",
+          "http://localhost:3000/catalog",
+          "http://localhost:3000/about",
+          "http://localhost:3000/product/majorette-motorsport-dtm-deluxe-cars-set-of-6-no-single-free-shipping-",
+          "http://localhost:3000/product/porsche-911-gt3-r-2026-gt-world-challenge-asia-mandalika"
+        ]
+      }
+    ],
+    "totals": {
+      "sitemap_files": 1,
+      "total_urls": 225,
+      "unique_urls": 225,
+      "duplicates_within_files": 0,
+      "duplicates_across_files": 0,
+      "invalid_locs": 0
+    },
+    "children": {
+      "limit": 50,
+      "listed": 0,
+      "fetched": 0,
+      "skipped": 0
+    },
+    "truncated": false,
+    "sample_size": 5
+  }
+}

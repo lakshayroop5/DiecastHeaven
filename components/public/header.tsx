@@ -41,10 +41,10 @@ export default function Header({ whatsappNumber = '', categories = [] }: HeaderP
       href: '/catalog',
       children: [
         { name: 'All Categories', href: '/catalog' },
-        ...categories.map((c) => ({ name: c.name, href: `/catalog?category=${c.slug}` })),
+        ...categories.map((c) => ({ name: c.name, href: `/categories/${c.slug}` })),
       ],
     },
-    { name: 'Brands', href: '/catalog?view=brands' },
+    { name: 'Brands', href: '/brands' },
     { name: 'New Arrivals', href: '/catalog' },
     { name: 'Pre Orders', href: '/catalog?orderType=PRE_ORDER' },
     { name: 'Contact', href: '#contact' },

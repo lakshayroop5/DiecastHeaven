@@ -126,10 +126,45 @@ The `{product}` placeholder in messages is replaced with the product title.
 ```env
 DATABASE_URL=           # libSQL connection string (Turso)
 DATABASE_AUTH_TOKEN=    # Turso auth token
-NEXT_PUBLIC_SITE_URL=   # Your production URL
+NEXT_PUBLIC_SITE_URL=   # Production origin, e.g. https://www.diecastheavenudaipur.in
+                        # MUST be set in Vercel. If unset or malformed it falls back
+                        # to the hard-coded production origin in lib/seo/site.ts.
 ```
 
 See [TURSO_SETUP.md](TURSO_SETUP.md) for detailed Turso configuration.
+
+## SEO & Discoverability
+
+Product pages emit Schema.org `Product` markup, every route declares its own
+canonical, and there are crawlable brand/category landing pages. A Google
+Merchant Center product feed is served at `/feed/google-merchant.xml`.
+
+| Surface | Where |
+|---|---|
+| Site identity, canonical origin, URL helpers | `lib/seo/site.ts` |
+| JSON-LD builders (Product, BreadcrumbList, ItemList, Organization) | `lib/seo/schema.ts` |
+| XML sitemap | `app/sitemap.ts` → `/sitemap.xml` |
+| Image sitemap | `app/sitemap-images.xml/route.ts` |
+| Merchant Center feed | `app/feed/google-merchant.xml/route.ts` |
+| robots.txt | `app/robots.ts` |
+| IndexNow (Bing/Yandex instant indexing) | `lib/seo/indexnow.ts`, called from `/api/revalidate` |
+| Brand / category landing pages | `/brands`, `/brands/[slug]`, `/categories/[slug]` |
+
+**Setting `NEXT_PUBLIC_SITE_URL` in Vercel is required** — without it every
+canonical, sitemap entry and feed link falls back to the hard-coded production
+origin. The fallback exists so a missing env var can never emit `localhost` URLs
+into production again.
+
+Full audit findings, what was implemented and the prioritised next steps live in
+[docs/seo/](docs/seo/):
+- [implementation.md](docs/seo/implementation.md) — what changed and how to verify it
+- [roadmap.md](docs/seo/roadmap.md) — what still needs doing, in priority order
+- [audits/](docs/seo/audits/) — the specialist audit reports
+
+> **Google Shopping note:** the site currently hands checkout off to WhatsApp.
+> Google treats that as a request for a quote and will not approve a Merchant
+> Center account until a real on-site checkout with an order confirmation
+> exists. See [roadmap.md § P1](docs/seo/roadmap.md) before submitting the feed.
 
 ## Admin Integration
 

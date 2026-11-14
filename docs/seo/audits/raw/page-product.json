@@ -1,0 +1,112 @@
+{
+  "url": "https://www.diecastheavenudaipur.in/product/porsche-911-gt3-r-2026-gt-world-challenge-asia-mandalika",
+  "source": "url",
+  "status_code": 200,
+  "headers_available": true,
+  "facts": {
+    "title": "Porsche 911 GT3 R 2026 GT World Challenge Asia Mandalika | Diecast Heaven",
+    "title_length": 73,
+    "title_count": 1,
+    "meta_description": "Porsche 911 GT3 R 2026 GT World Challenge Asia Mandalika",
+    "meta_description_length": 56,
+    "h1": [
+      "Porsche 911 GT3 R 2026 GT World Challenge Asia Mandalika"
+    ],
+    "h1_count": 1,
+    "heading_level_skips": 0,
+    "template_heading_level_skips": 0,
+    "canonical": null,
+    "canonical_status": "missing",
+    "canonical_note": null,
+    "meta_robots": null,
+    "x_robots_tag": null,
+    "x_robots_other_agents": [],
+    "hreflang_count": 0,
+    "lang": "en",
+    "has_doctype": true,
+    "meta_charset": "utf-8",
+    "header_charset": "utf-8",
+    "has_viewport": true,
+    "images": {
+      "total": 8,
+      "missing_alt": 0,
+      "empty_alt": 0,
+      "missing_dimensions": 7,
+      "first_image_lazy": false
+    },
+    "links": {
+      "total": 27,
+      "without_text": 0,
+      "generic_anchor": 0,
+      "http_on_https": 0
+    },
+    "mixed_content": 0,
+    "url": {
+      "length": 100,
+      "query_params": []
+    },
+    "html_bytes": 81163,
+    "dom": {
+      "nodes": 317,
+      "max_depth": 12,
+      "max_children": 29,
+      "widest_element": "head"
+    },
+    "open_graph": {
+      "og:title": "Porsche 911 GT3 R 2026 GT World Challenge Asia Mandalika | Diecast Heaven",
+      "og:description": "Porsche 911 GT3 R 2026 GT World Challenge Asia Mandalika",
+      "og:image": "https://1hcggaciljsuxuel.public.blob.vercel-storage.com/products/1793784550915-img-0749.png"
+    },
+    "jsonld_blocks": 0,
+    "jsonld_invalid": 0,
+    "word_count": 208,
+    "words_measured": true,
+    "title_relevance": 0.75,
+    "description_relevance": 1.0
+  },
+  "findings": [
+    {
+      "id": "title-too-long",
+      "severity": "Medium",
+      "message": "The title is longer than 60 characters and may be truncated in results. This is a display heuristic, not a published search engine limit.",
+      "evidence": "73 characters: Porsche 911 GT3 R 2026 GT World Challenge Asia Mandalika | Diecast Heaven"
+    },
+    {
+      "id": "missing-canonical",
+      "severity": "Medium",
+      "message": "The page has no canonical link. Search engines then choose the preferred URL themselves.",
+      "evidence": "no <link rel=\"canonical\"> with an href"
+    },
+    {
+      "id": "images-missing-dimensions",
+      "severity": "Medium",
+      "message": "Some images have no width and height attributes, which lets the layout shift while they load.",
+      "evidence": "7 of 8 images: /_next/image?url=https%3A%2F%2F1hcggaciljsuxuel.public.bl..., /_next/image?url=https%3A%2F%2F1hcggaciljsuxuel.public.bl..., /_next/image?url=https%3A%2F%2F1hcggaciljsuxuel.public.bl....",
+      "count": 7
+    }
+  ],
+  "not_checked": [],
+  "thresholds": {
+    "title_min_chars": 30,
+    "title_max_chars": 60,
+    "meta_description_min_chars": 120,
+    "meta_description_max_chars": 160,
+    "url_max_chars": 100,
+    "html_max_bytes": 2000000,
+    "thin_content_min_words": 200,
+    "dom_max_depth": 32,
+    "dom_max_children": 60,
+    "title_relevance_min": 0.3,
+    "description_relevance_min": 0.2,
+    "relevance_min_words": 50,
+    "evidence_max_chars": 200
+  },
+  "summary": {
+    "Critical": 0,
+    "High": 0,
+    "Medium": 3,
+    "Low": 0,
+    "total": 3,
+    "checks_run": 47
+  }
+}

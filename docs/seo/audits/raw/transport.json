@@ -1,0 +1,164 @@
+{
+  "url": "https://www.diecastheavenudaipur.in",
+  "host": "www.diecastheavenudaipur.in",
+  "tls": {
+    "host": "www.diecastheavenudaipur.in",
+    "port": 443,
+    "connected_ip": "216.198.79.1",
+    "verified": true,
+    "verify_error": null,
+    "verify_code": null,
+    "certificate_read": true,
+    "subject": {
+      "common_name": "www.diecastheavenudaipur.in",
+      "organization": null
+    },
+    "issuer": {
+      "common_name": "YR1",
+      "organization": "Let's Encrypt"
+    },
+    "not_before": "2026-09-27T17:49:18Z",
+    "not_after": "2026-12-26T17:49:17Z",
+    "days_until_expiry": 44,
+    "expired": false,
+    "not_yet_valid": false,
+    "san": [
+      "www.diecastheavenudaipur.in"
+    ],
+    "san_count": 1,
+    "covers_host": true,
+    "sibling_host": "diecastheavenudaipur.in",
+    "covers_sibling": false,
+    "protocol": "TLSv1.3",
+    "cipher": "TLS_AES_128_GCM_SHA256",
+    "cipher_bits": 128
+  },
+  "headers": {
+    "url": "https://www.diecastheavenudaipur.in/",
+    "status": 200,
+    "https": true,
+    "hsts": {
+      "present": true,
+      "value": "max-age=63072000",
+      "max_age": 63072000,
+      "include_subdomains": false,
+      "preload": false,
+      "meets_preload_requirements": false,
+      "preload_gaps": [
+        "includeSubDomains is missing.",
+        "The preload directive is missing."
+      ],
+      "preload_scope_note": "Covers the header directives, the certificate and the same-host HTTP redirect when those sections ran. Not checked: that every subdomain serves HTTPS, and that this host is the registrable domain the preload list requires.",
+      "issues": [
+        "includeSubDomains is not set."
+      ]
+    },
+    "csp": {
+      "present": false,
+      "report_only": false,
+      "policies": 0,
+      "issues": [
+        "Content-Security-Policy was not sent."
+      ]
+    },
+    "x_content_type_options": {
+      "present": false,
+      "value": null,
+      "ok": false
+    },
+    "framing": {
+      "x_frame_options": null,
+      "frame_ancestors": false,
+      "ok": false
+    },
+    "referrer_policy": {
+      "present": false,
+      "value": null,
+      "ok": false
+    },
+    "permissions_policy": {
+      "present": false,
+      "feature_policy_present": false
+    },
+    "cookies": []
+  },
+  "redirects": {
+    "http_to_https": {
+      "checked_url": "http://www.diecastheavenudaipur.in/",
+      "redirects_to_https": true,
+      "one_hop": true,
+      "first_hop_status": 308,
+      "first_hop_target": "https://www.diecastheavenudaipur.in/",
+      "first_hop_same_host": true,
+      "permanent": true,
+      "hops": 1,
+      "final_url": "https://www.diecastheavenudaipur.in/",
+      "error": null
+    },
+    "www": {
+      "host": "www.diecastheavenudaipur.in",
+      "sibling_host": "diecastheavenudaipur.in",
+      "host_final_url": "https://www.diecastheavenudaipur.in/",
+      "sibling_final_url": "https://www.diecastheavenudaipur.in/",
+      "sibling_resolves": true,
+      "sibling_tls_error": false,
+      "same_final_url": true,
+      "error": null
+    }
+  },
+  "findings": [
+    {
+      "id": "hsts-weak",
+      "severity": "Low",
+      "message": "The Strict-Transport-Security header is weak.",
+      "evidence": {
+        "value": "max-age=63072000",
+        "issues": [
+          "includeSubDomains is not set."
+        ]
+      }
+    },
+    {
+      "id": "csp-missing",
+      "severity": "Low",
+      "message": "No Content-Security-Policy header is sent.",
+      "evidence": {}
+    },
+    {
+      "id": "nosniff-missing",
+      "severity": "Low",
+      "message": "X-Content-Type-Options is not set to nosniff.",
+      "evidence": {
+        "value": null
+      }
+    },
+    {
+      "id": "clickjacking-protection-missing",
+      "severity": "Low",
+      "message": "Neither X-Frame-Options nor a CSP frame-ancestors directive limits framing of the page.",
+      "evidence": {
+        "x_frame_options": null
+      }
+    },
+    {
+      "id": "referrer-policy-missing",
+      "severity": "Info",
+      "message": "No Referrer-Policy header is sent, so the browser default applies.",
+      "evidence": {}
+    },
+    {
+      "id": "permissions-policy-missing",
+      "severity": "Info",
+      "message": "No Permissions-Policy header is sent.",
+      "evidence": {}
+    }
+  ],
+  "summary": {
+    "Critical": 0,
+    "High": 0,
+    "Medium": 0,
+    "Low": 4,
+    "Info": 2,
+    "total": 6
+  }
+}

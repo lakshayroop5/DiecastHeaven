@@ -1,15 +1,31 @@
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
 import { getSiteSettings } from '@/lib/queries'
+import { SITE_NAME, SITE_URL, truncate } from '@/lib/seo/site'
 import type { Metadata } from 'next'
 
-export const dynamic = 'force-dynamic'
+const ABOUT_TITLE = `About ${SITE_NAME} — Genuine Diecast Collector Cars`
+const ABOUT_DESCRIPTION = truncate(
+  `Who we are: a specialist diecast retailer in Udaipur, Rajasthan selling genuine Hot Wheels, Hot Wheels Premium, Majorette, Matchbox, Bburago and Tomica collector cars across India.`,
+  158
+)
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: `About | ${process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven Udaipur'}`,
-    description: 'Learn about our Hot Wheels collection and expertise',
+    title: { absolute: ABOUT_TITLE },
+    description: ABOUT_DESCRIPTION,
+    alternates: { canonical: '/about' },
+    openGraph: {
+      type: 'website',
+      url: `${SITE_URL}/about`,
+      siteName: SITE_NAME,
+      title: ABOUT_TITLE,
+      description: ABOUT_DESCRIPTION,
+    },
   }
 }
+
+// Static content - no reason to re-render per request.
+export const revalidate = 86400
 
 export default async function AboutPage() {
   const settings = await getSiteSettings()

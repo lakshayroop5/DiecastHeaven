@@ -1,19 +1,67 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
-import { getProductBySlug } from '@/lib/queries'
+import { getProductBySlug, getPublishedProducts } from '@/lib/queries'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
 import AddToCartButton from '@/components/public/add-to-cart-button'
 import RelatedProducts from '@/components/public/related-products'
 import ProductImageGallery from '@/components/public/product-image-gallery'
 import ProductViewTracker from '@/components/analytics/product-view-tracker'
+import JsonLd from '@/components/seo/json-ld'
 import { Badge } from '@/components/ui/badge'
 import { formatPrice } from '@/lib/utils'
+import {
+  breadcrumbSchema,
+  productSchema,
+} from '@/lib/seo/schema'
+import { SITE_NAME, absoluteUrl, truncate } from '@/lib/seo/site'
+import type { ProductWithRelations } from '@/lib/types'
 import type { Metadata } from 'next'
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>
+}
+
+/**
+ * Product titles already contain the model and often the brand, so the brand is
+ * only prepended when it is genuinely missing. That keeps "Hot Wheels Premium
+ * Mercedes 300 SL" from becoming "Hotwheels Premium Hot Wheels Premium ...".
+ */
+function buildProductTitle(product: ProductWithRelations): string {
+  const base = product.title.trim()
+  const brand = product.brand?.name?.trim()
+  const hasBrand = brand ? base.toLowerCase().includes(brand.toLowerCase()) : true
+
+  let title = brand && !hasBrand ? `${brand} ${base}` : base
+
+  if (product.scale && !title.toLowerCase().includes(product.scale.toLowerCase())) {
+    title = `${title} (${product.scale})`
+  }
+
+  return title
+}
+
+/**
+ * Description fallback ladder. `shortDesc` is frequently just the title repeated,
+ * which is why the old version shipped 56-character descriptions identical to
+ * the H1. Anything shorter than 40 characters, or equal to the title, is skipped.
+ */
+function buildProductDescription(product: ProductWithRelations): string {
+  const candidates = [product.shortDesc, product.description]
+    .map((value) => value?.replace(/\s+/g, ' ').trim() ?? '')
+    .filter((value) => value.length >= 40 && value.toLowerCase() !== product.title.toLowerCase())
+
+  if (candidates.length) return truncate(candidates[0], 158)
+
+  const brand = product.brand?.name
+  const scale = product.scale ? ` in ${product.scale} scale` : ''
+
+  return truncate(
+    `Buy the ${product.title}${brand ? ` by ${brand}` : ''}${scale} at ${SITE_NAME}. ` +
+      `Genuine diecast collector car, carefully checked and packed, shipping across India. ` +
+      `Message us on WhatsApp to confirm availability and price.`,
+    158
+  )
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
@@ -21,24 +69,57 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const product = await getProductBySlug(slug)
 
   if (!product) {
-    return { title: 'Product Not Found' }
+    return {
+      title: 'Product not found',
+      robots: { index: false, follow: true },
+    }
   }
 
+  const title = buildProductTitle(product)
+  const description = buildProductDescription(product)
+  const canonical = `/product/${product.slug}`
+  const image = product.images[0]?.imageUrl ? absoluteUrl(product.images[0].imageUrl) : null
+
   return {
-    title: `${product.title} | ${process.env.DEFAULT_BUSINESS_NAME || 'Diecast Heaven Udaipur'}`,
-    description:
-      product.shortDesc ||
-      product.description?.substring(0, 160) ||
-      'Diecast collector car',
+    title: { absolute: `${title} | ${SITE_NAME}` },
+    description,
+    alternates: { canonical },
     openGraph: {
-      images: product.images[0]?.imageUrl
-        ? [product.images[0].imageUrl]
-        : undefined,
+      type: 'website',
+      url: absoluteUrl(canonical),
+      siteName: SITE_NAME,
+      title: `${title} | ${SITE_NAME}`,
+      description,
+      ...(image ? { images: [{ url: image, alt: title }] } : {}),
     },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | ${SITE_NAME}`,
+      description,
+      ...(image ? { images: [image] } : {}),
+    },
+    // Note: Open Graph product tags (og:type=product, product:price:amount) are
+    // deliberately not emitted. Next 14's OpenGraphType union has no 'product'
+    // and `other` renders name= rather than property=, so they would be invalid
+    // markup. Price and availability are exposed in the Product JSON-LD instead,
+    // which is the signal Google actually consumes.
   }
 }
 
-export const dynamic = 'force-dynamic'
+// Rendered on demand and cached at the edge; product edits invalidate the
+// `products` tag via /api/revalidate. `force-dynamic` was re-rendering every
+// product page on every request, which cost TTFB and crawl budget.
+export const revalidate = 300
+
+/**
+ * Prerenders every published product at build time so crawlers get static HTML.
+ * New products render on demand (`dynamicParams` defaults to true) and are then
+ * cached by the `revalidate` window above.
+ */
+export async function generateStaticParams() {
+  const products = await getPublishedProducts()
+  return products.map((product) => ({ slug: product.slug }))
+}
 
 function RelatedSkeleton() {
   return (
@@ -72,8 +153,36 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const hasDiscount = product.offerPrice != null && product.price != null && product.offerPrice < product.price
   const discountPct = hasDiscount ? Math.round(((product.price! - product.offerPrice!) / product.price!) * 100) : 0
 
+  // Breadcrumb trail mirrors the visible nav so the markup and the UI agree.
+  const breadcrumbItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Catalog', path: '/catalog' },
+    ...(product.brand
+      ? [{ name: product.brand.name, path: `/brands/${product.brand.slug}` }]
+      : []),
+    { name: product.title, path: `/product/${product.slug}` },
+  ]
+
+  const specs = [
+    product.brand ? { label: 'Brand', value: product.brand.name } : null,
+    product.scale ? { label: 'Scale', value: product.scale } : null,
+    product.categories.length
+      ? { label: 'Category', value: product.categories.map(({ category }) => category.name).join(', ') }
+      : null,
+    {
+      label: 'Availability',
+      value:
+        product.status === 'SOLD_OUT'
+          ? 'Sold out'
+          : product.orderType === 'PRE_ORDER'
+            ? 'Pre-order'
+            : 'In stock',
+    },
+  ].filter((spec): spec is { label: string; value: string } => spec !== null)
+
   return (
     <div className="min-h-screen bg-hotwheels-black">
+      <JsonLd data={[productSchema(product), breadcrumbSchema(breadcrumbItems)]} />
       <ProductViewTracker
         product={{
           id: product.id,
@@ -87,10 +196,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
       />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:py-12 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
-        <nav className="mb-4 sm:mb-6 text-xs sm:text-sm text-gray-400">
+        <nav aria-label="Breadcrumb" className="mb-4 sm:mb-6 text-xs sm:text-sm text-gray-400">
           <Link href="/" className="hover:text-hotwheels-white transition-colors">Home</Link>
           <span className="mx-2">/</span>
           <Link href="/catalog" className="hover:text-hotwheels-white transition-colors">Catalog</Link>
+          {product.brand && (
+            <>
+              <span className="mx-2">/</span>
+              <Link
+                href={`/brands/${product.brand.slug}`}
+                className="hover:text-hotwheels-white transition-colors"
+              >
+                {product.brand.name}
+              </Link>
+            </>
+          )}
           <span className="mx-2">/</span>
           <span className="text-hotwheels-white">{product.title}</span>
         </nav>
@@ -166,6 +286,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </span>
               )}
             </div>
+
+            {/* Specifications - real data only, and it lifts these pages out of thin content */}
+            {specs.length > 0 && (
+              <dl className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                {specs.map((spec) => (
+                  <div key={spec.label} className="flex justify-between gap-4 border-b border-[#2D2D2D] py-1.5">
+                    <dt className="text-gray-400">{spec.label}</dt>
+                    <dd className="text-hotwheels-white text-right">{spec.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
 
             {/* Description */}
             {product.description && (

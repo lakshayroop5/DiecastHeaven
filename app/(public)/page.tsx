@@ -1,11 +1,39 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import Hero from '@/components/public/hero'
 import FeaturedProducts from '@/components/public/featured-products'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
 import { getBrands, getSiteSettings, getHeroMedia } from '@/lib/queries'
+import { SITE_NAME, SITE_URL, truncate } from '@/lib/seo/site'
 
-export const dynamic = 'force-dynamic'
+const HOME_TITLE = 'Diecast Heaven Udaipur | Hot Wheels & Premium Diecast Cars in India'
+const HOME_DESCRIPTION = truncate(
+  `Buy Hot Wheels, Hot Wheels Premium, Hot Wheels Silver Series, Majorette, Matchbox, Bburago and Tomica diecast collector cars at ${SITE_NAME}. Genuine models, prices in INR, shipping across India.`,
+  158
+)
+
+export const metadata: Metadata = {
+  title: { absolute: HOME_TITLE },
+  description: HOME_DESCRIPTION,
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+  },
+}
+
+// Cached at the edge; settings, hero media and featured products all invalidate
+// through their cache tags via /api/revalidate.
+export const revalidate = 300
 
 function FeaturedSkeleton() {
   return (
@@ -73,7 +101,7 @@ export default async function HomePage() {
               Shop by Brand
             </h2>
             <Link
-              href="/catalog?view=brands"
+              href="/brands"
               className="text-sm font-medium text-hotwheels-red hover:text-hotwheels-yellow transition-colors"
             >
               View All &rarr;
@@ -83,7 +111,7 @@ export default async function HomePage() {
             {brands.map((brand) => (
               <Link
                 key={brand.id}
-                href={`/catalog?brand=${brand.slug}`}
+                href={`/brands/${brand.slug}`}
                 className="group bg-hotwheels-gray rounded-lg p-4 text-center hover:bg-hotwheels-red/20 transition-colors border border-hotwheels-gray hover:border-hotwheels-red"
               >
                 <h3 className="font-semibold text-sm text-hotwheels-white group-hover:text-hotwheels-yellow transition-colors">

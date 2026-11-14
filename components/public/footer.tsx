@@ -5,7 +5,7 @@ import { buildWhatsAppLink } from '@/lib/whatsapp'
 const QUICK_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/catalog', label: 'Catalog' },
-  { href: '/catalog?view=brands', label: 'Brands' },
+  { href: '/brands', label: 'Brands' },
   { href: '/about', label: 'About' },
 ] as const
 
