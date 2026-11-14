@@ -157,6 +157,10 @@ export function itemListSchema(
 /* -------------------------------------------------------------------------- */
 /* Site-level entities                                                        */
 /* -------------------------------------------------------------------------- */
+const POSTAL_ADDRESS: JsonLdNode = {
+  '@type': 'PostalAddress',
+  ...BUSINESS.address,
+}
 
 export function organizationSchema(): JsonLdNode {
   return {
@@ -173,12 +177,7 @@ export function organizationSchema(): JsonLdNode {
     },
     image: absoluteUrl(BUSINESS.logoPath),
     telephone: BUSINESS.telephone,
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: BUSINESS.address.addressLocality,
-      addressRegion: BUSINESS.address.addressRegion,
-      addressCountry: BUSINESS.address.addressCountry,
-    },
+    address: POSTAL_ADDRESS,
     contactPoint: [
       {
         '@type': 'ContactPoint',
@@ -188,30 +187,39 @@ export function organizationSchema(): JsonLdNode {
         availableLanguage: ['en', 'hi'],
       },
     ],
-    ...(BUSINESS.sameAs.length ? { sameAs: BUSINESS.sameAs } : {}),
+    sameAs: BUSINESS.sameAs,
   }
 }
 
 export function localBusinessSchema(): JsonLdNode {
   return {
     '@context': SCHEMA_ORG,
-    '@type': 'Store',
+    '@type': 'ToyStore',
     '@id': `${SITE_URL}/#store`,
     name: BUSINESS.name,
     url: SITE_URL,
     image: absoluteUrl(BUSINESS.logoPath),
     description: BUSINESS.description,
     telephone: BUSINESS.telephone,
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: BUSINESS.address.addressLocality,
-      addressRegion: BUSINESS.address.addressRegion,
-      addressCountry: BUSINESS.address.addressCountry,
+    address: POSTAL_ADDRESS,
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: BUSINESS.geo.latitude,
+      longitude: BUSINESS.geo.longitude,
     },
+    hasMap: BUSINESS.mapUrl,
+    priceRange: BUSINESS.priceRange,
     areaServed: { '@type': 'Country', name: BUSINESS.areaServed },
     openingHours: BUSINESS.openingHours,
+    openingHoursSpecification: BUSINESS.openingHoursSpecification.map((spec) => ({
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: [...spec.days],
+      opens: spec.opens,
+      closes: spec.closes,
+    })),
     currenciesAccepted: CURRENCY,
     parentOrganization: { '@id': `${SITE_URL}/#organization` },
+    sameAs: BUSINESS.sameAs,
   }
 }
 

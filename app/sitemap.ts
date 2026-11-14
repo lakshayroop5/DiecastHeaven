@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { getPublishedProducts, getBrands, getCategories } from '@/lib/queries'
 import { SITE_URL } from '@/lib/seo/site'
+import { POLICIES } from '@/lib/policies'
 
 /**
  * XML sitemap.
@@ -53,6 +54,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'yearly',
       priority: 0.4,
     },
+    {
+      url: `${SITE_URL}/contact`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.5,
+    },
   ]
 
   // A brand or category with no live products renders an empty page. Those must
@@ -90,5 +97,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  return [...staticRoutes, ...brandRoutes, ...categoryRoutes, ...productRoutes]
+  // Policy pages are static content; `revalidate = 86400` on the route governs
+  // how often they are re-read, so build time is an honest lastModified value.
+  const policyRoutes: MetadataRoute.Sitemap = POLICIES.map(({ slug }) => ({
+    url: `${SITE_URL}/policies/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'yearly',
+    priority: 0.3,
+  }))
+
+  return [
+    ...staticRoutes,
+    ...policyRoutes,
+    ...brandRoutes,
+    ...categoryRoutes,
+    ...productRoutes,
+  ]
 }

@@ -1,4 +1,4 @@
-import { getSiteSettings, getCategories } from '@/lib/queries'
+import { getCategories } from '@/lib/queries'
 import Header from '@/components/public/header'
 import Footer from '@/components/public/footer'
 import PageViewTracker from '@/components/analytics/page-view-tracker'
@@ -15,11 +15,11 @@ export default async function PublicLayout({
 }: {
   children: React.ReactNode
 }) {
-  const [settings, categories] = await Promise.all([getSiteSettings(), getCategories()])
+  const categories = await getCategories()
   return (
     <>
       <PageViewTracker />
-      <Header whatsappNumber={settings?.whatsappNumber} categories={categories} />
+      <Header categories={categories} />
       <main className="flex-1">{children}</main>
       <Footer />
     </>

@@ -1,0 +1,99 @@
+{
+  "summary": {
+    "health_score": 38,
+    "business_type": "E-commerce + local store (hybrid), WhatsApp checkout",
+    "top_findings": [
+      "Unauthenticated access to /api/admin/* (GET /api/admin/products returns 200 with full product data)",
+      "robots.txt and sitemap.xml point to http://localhost:3000",
+      "0/239 product pages have Product/Offer JSON-LD or canonical tags",
+      "No GTIN/MPN product identifiers in data model",
+      "No Merchant Center feed; checkout is WhatsApp-only"
+    ],
+    "quick_wins": [
+      "Deploy existing local SEO code (canonicals, JSON-LD, sitemap/robots fixes, /contact)",
+      "Set NEXT_PUBLIC_SITE_URL in Vercel Production",
+      "Restore title template in app/(public)/layout.tsx",
+      "Map PRE_ORDER to schema.org PreOrder availability",
+      "Verify Search Console domain property and submit sitemap"
+    ]
+  },
+  "categories": [
+    {
+      "name": "Technical SEO",
+      "score": 40,
+      "what_works": ["Server-rendered content (1,152 words without JS)", "HTTPS", "All 239 product URLs return 200"],
+      "findings": [
+        {"title": "Sitemap and robots point to localhost", "severity": "Critical", "description": "robots.txt declares http://localhost:3000/sitemap.xml; all 242 sitemap <loc> values use localhost. Deployed code falls back to localhost when NEXT_PUBLIC_SITE_URL is unset.", "recommendation": "Deploy local robots.ts/sitemap.ts and set NEXT_PUBLIC_SITE_URL in Vercel Production."},
+        {"title": "No canonical tags", "severity": "Critical", "description": "0/239 live product pages have rel=canonical.", "recommendation": "Deploy local alternates.canonical metadata."},
+        {"title": "/contact returns 404", "severity": "High", "description": "Contact page exists only as an untracked local file.", "recommendation": "Deploy."},
+        {"title": "All pages uncached (no-store)", "severity": "High", "description": "force-dynamic yields Cache-Control no-store and x-vercel-cache MISS on 239/239; TTFB p90 668 ms, max 5.3 s; bfcache disabled.", "recommendation": "Use ISR with existing revalidateTag invalidation."},
+        {"title": "Catalog beyond first 12 products only via infinite scroll", "severity": "Medium", "description": "product-grid.tsx loads further pages through /api/catalog on scroll.", "recommendation": "Add crawlable ?page=N links."}
+      ]
+    },
+    {
+      "name": "Content Quality",
+      "score": 35,
+      "what_works": ["No duplicate product names", "Brand present on 96% of products"],
+      "findings": [
+        {"title": "Thin product descriptions", "severity": "High", "description": "58% of descriptions under 50 words, 15% empty; short description equals title on 60%.", "recommendation": "60-150 unique words plus specs list, starting with top 50 products by views."},
+        {"title": "Product names lack brand, scale and type", "severity": "High", "description": "21% ALL CAPS; 10% three words or fewer (e.g. TWIN TAGS).", "recommendation": "Brand + Series + Model + Colour + Scale + Die-Cast Car."}
+      ]
+    },
+    {
+      "name": "On-Page SEO",
+      "score": 40,
+      "what_works": ["Single H1 per page", "Breadcrumb navigation on product pages"],
+      "findings": [
+        {"title": "Weak homepage title", "severity": "High", "description": "Live title is 'Diecast Heaven'.", "recommendation": "Include Udaipur, Hot Wheels/diecast and store intent."},
+        {"title": "Meta description duplicates title", "severity": "High", "description": "61% of product pages.", "recommendation": "Template with model, scale, price, store and shipping."},
+        {"title": "No brand/category landing pages", "severity": "Medium", "description": "Filters canonicalize to /catalog.", "recommendation": "Add /brand/[slug] and /category/[slug]."}
+      ]
+    },
+    {
+      "name": "Schema / Structured Data",
+      "score": 5,
+      "what_works": ["Local code already emits Product, Offer, BreadcrumbList, Organization, WebSite, ToyStore"],
+      "findings": [
+        {"title": "No structured data live", "severity": "Critical", "description": "0 JSON-LD blocks on home, catalog and 239 product pages.", "recommendation": "Deploy local JSON-LD."},
+        {"title": "Merchant listing fields incomplete in local code", "severity": "High", "description": "Validator: missing hasMerchantReturnPolicy and shippingDetails; no gtin/mpn/sku; PRE_ORDER mapped to InStock; no StrikethroughPrice.", "recommendation": "Extend productJsonLd per Action Plan 1.3."}
+      ]
+    },
+    {
+      "name": "Performance (CWV)",
+      "score": 60,
+      "what_works": ["LCP image preloaded with fetchpriority=high"],
+      "findings": [
+        {"title": "CWV not measured", "severity": "Info", "description": "PSI keyless quota exceeded; score is an estimate.", "recommendation": "Add PSI API key and re-run pagespeed_check.py."}
+      ]
+    },
+    {
+      "name": "AI Search Readiness",
+      "score": 40,
+      "what_works": ["Content server-rendered", "Crawlers allowed"],
+      "findings": [
+        {"title": "Few citable product facts", "severity": "Medium", "description": "Scale on 38% of products; no series, year or colour fields.", "recommendation": "Add structured spec fields and render them."}
+      ]
+    },
+    {
+      "name": "Images",
+      "score": 55,
+      "what_works": ["Alt text present", "next/image optimization"],
+      "findings": [
+        {"title": "Single image per product", "severity": "Medium", "description": "Only 8% have more than one image.", "recommendation": "3+ angles; clean main image without text overlay."},
+        {"title": "Camera filenames", "severity": "Low", "description": "82% like img-2277.jpeg.", "recommendation": "Name uploads from product slug."}
+      ]
+    }
+  ],
+  "action_plan": {
+    "phases": [
+      {"name": "Phase 1: Critical Fixes", "timeframe": "Week 1", "items": ["Protect /api/admin/* in middleware", "Set NEXT_PUBLIC_SITE_URL", "Deploy local SEO code", "Fix title template", "Search Console + sitemap", "Add gtin/mpn/color/series fields", "Complete Product JSON-LD", "Policy pages", "Merchant Center feed + account"]},
+      {"name": "Phase 2: High-Impact Improvements", "timeframe": "Weeks 2-3", "items": ["Rename products with brand/series/scale", "Normalize brands and categories", "Meta description template", "Online payment decision"]},
+      {"name": "Phase 3: Content & Authority", "timeframe": "Month 2", "items": ["Unique descriptions for top 50 products", "Brand and category landing pages", "Crawlable catalog pagination", "3+ images per product", "GBP free local listings"]},
+      {"name": "Phase 4: Monitoring & Iteration", "timeframe": "Ongoing", "items": ["ISR caching", "CWV with PSI key", "Merchant Center diagnostics", "Drift baseline and monthly compare"]}
+    ]
+  },
+  "artifacts": {
+    "findings_dir": "raw/",
+    "screenshots_dir": "screenshots/"
+  }
+}

@@ -52,18 +52,26 @@ export const BUSINESS = {
   whatsapp: '919079674984',
   email: null as string | null,
   address: {
-    streetAddress: null as string | null,
+    streetAddress: 'BVR Super Mart, Block-E, 335, near Goverdhan Villas, Transport Nagar, Hiran Magri',
     addressLocality: 'Udaipur',
     addressRegion: 'Rajasthan',
-    postalCode: null as string | null,
+    postalCode: '313001',
     addressCountry: 'IN',
   },
-  geo: null as { latitude: number; longitude: number } | null,
+  geo: { latitude: 24.532529404548388, longitude: 73.68694965767143 },
+  mapUrl: 'https://maps.app.goo.gl/3C6nyt5BbfqXL3hdA',
+  priceRange: '₹₹',
   areaServed: 'India',
   openingHours: ['Mo-Sa 10:00-20:00', 'Su 10:00-18:00'],
+  openingHoursSpecification: [
+    { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], opens: '10:00', closes: '20:00' },
+    { days: ['Sunday'], opens: '10:00', closes: '18:00' },
+  ],
   logoPath: '/diecast-heaven-logo.png',
-  // Populated once social profiles exist; Organization `sameAs` needs real URLs.
-  sameAs: [] as string[],
+  sameAs: [
+    'https://www.instagram.com/diecast_heaven_udaipur/',
+    'https://www.youtube.com/@diecastheaven-udaipur',
+  ],
 } as const
 
 /** Absolute URL for a site-relative path. Leaves already-absolute URLs alone. */

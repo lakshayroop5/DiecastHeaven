@@ -6,7 +6,6 @@ import { Menu, X, Search, ChevronDown, ShoppingBag } from 'lucide-react'
 import { useState, useEffect, useRef, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/lib/cart-context'
-import { buildWhatsAppLink } from '@/lib/whatsapp'
 
 interface NavChild {
   name: string
@@ -20,11 +19,10 @@ interface NavItem {
 }
 
 interface HeaderProps {
-  whatsappNumber?: string
   categories?: Array<{ name: string; slug: string }>
 }
 
-export default function Header({ whatsappNumber = '', categories = [] }: HeaderProps) {
+export default function Header({ categories = [] }: HeaderProps) {
   const navigation: NavItem[] = [
     { name: 'Home', href: '/' },
     {
@@ -47,7 +45,7 @@ export default function Header({ whatsappNumber = '', categories = [] }: HeaderP
     { name: 'Brands', href: '/brands' },
     { name: 'New Arrivals', href: '/catalog' },
     { name: 'Pre Orders', href: '/catalog?orderType=PRE_ORDER' },
-    { name: 'Contact', href: '#contact' },
+    { name: 'Contact', href: '/contact' },
   ]
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null)
@@ -106,9 +104,6 @@ export default function Header({ whatsappNumber = '', categories = [] }: HeaderP
         {/* Desktop Nav */}
         <div className="hidden lg:flex lg:items-center lg:gap-x-8">
           {navigation.map((item) => {
-            const href = item.name === 'Contact' && whatsappNumber
-              ? buildWhatsAppLink(whatsappNumber)
-              : item.href
             return (
             <div
               key={item.name}
@@ -117,7 +112,7 @@ export default function Header({ whatsappNumber = '', categories = [] }: HeaderP
               onMouseLeave={() => handleDropdownLeave()}
             >
               <Link
-                href={href}
+                href={item.href}
                 className={`text-sm font-medium transition-colors inline-flex items-center gap-1 ${
                   item.name === 'Home'
                     ? 'text-[#D4A843] border-b-2 border-[#D4A843] pb-0.5'
@@ -247,9 +242,6 @@ export default function Header({ whatsappNumber = '', categories = [] }: HeaderP
 
         <nav className="flex-1 flex flex-col gap-2 max-w-md mx-auto w-full overflow-y-auto py-2">
           {navigation.map((item) => {
-            const href = item.name === 'Contact' && whatsappNumber
-              ? buildWhatsAppLink(whatsappNumber)
-              : item.href
             const expanded = mobileExpanded === item.name
             return (
             <div key={item.name}>
@@ -264,7 +256,7 @@ export default function Header({ whatsappNumber = '', categories = [] }: HeaderP
                 </button>
               ) : (
                 <Link
-                  href={href}
+                  href={item.href}
                   className="block rounded-lg px-4 py-3 text-center text-lg font-semibold text-white hover:bg-hotwheels-black transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >

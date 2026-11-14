@@ -1,5 +1,7 @@
+import JsonLd from '@/components/seo/json-ld'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
 import { getSiteSettings } from '@/lib/queries'
+import type { JsonLdNode } from '@/lib/seo/schema'
 import { SITE_NAME, SITE_URL, truncate } from '@/lib/seo/site'
 import type { Metadata } from 'next'
 
@@ -8,6 +10,36 @@ const ABOUT_DESCRIPTION = truncate(
   `Who we are: a specialist diecast retailer in Udaipur, Rajasthan selling genuine Hot Wheels, Hot Wheels Premium, Majorette, Matchbox, Bburago and Tomica collector cars across India.`,
   158
 )
+
+// Single source: the FAQ cards and the FAQPage JSON-LD render from this list,
+// so the schema can never drift from the visible copy.
+const FAQS = [
+  {
+    question: 'Are all cars authentic?',
+    answer:
+      'Yes. Every model is a genuine, officially licensed diecast from its brand — Hot Wheels, Majorette, Matchbox, Bburago, Tomica and others.',
+  },
+  {
+    question: 'How do I know the condition of the car?',
+    answer:
+      "All cars are described with accurate condition details. Photos show the actual item you'll receive. Contact us if you need more details.",
+  },
+  {
+    question: 'Can I request a specific model?',
+    answer:
+      "Absolutely! If we don't have it in stock, we can help you find it through our network of collectors.",
+  },
+] as const
+
+const FAQ_SCHEMA: JsonLdNode = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQS.map(({ question, answer }) => ({
+    '@type': 'Question',
+    name: question,
+    acceptedAnswer: { '@type': 'Answer', text: answer },
+  })),
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -32,6 +64,7 @@ export default async function AboutPage() {
 
   return (
     <div className="min-h-screen bg-hotwheels-black">
+      <JsonLd data={FAQ_SCHEMA} />
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <div className="text-center mb-12">
@@ -111,35 +144,12 @@ export default async function AboutPage() {
           </h2>
           
           <div className="space-y-4">
-            <div className="bg-hotwheels-gray rounded-lg p-6">
-              <h3 className="font-semibold text-hotwheels-yellow mb-2">
-                Are all cars authentic Hot Wheels?
-              </h3>
-              <p className="text-gray-300">
-                Yes, every model in our collection is 100% authentic Hot Wheels diecast. 
-                We guarantee authenticity on all our products.
-              </p>
-            </div>
-            
-            <div className="bg-hotwheels-gray rounded-lg p-6">
-              <h3 className="font-semibold text-hotwheels-yellow mb-2">
-                How do I know the condition of the car?
-              </h3>
-              <p className="text-gray-300">
-                All cars are described with accurate condition details. Photos show 
-                the actual item you'll receive. Contact us if you need more details.
-              </p>
-            </div>
-            
-            <div className="bg-hotwheels-gray rounded-lg p-6">
-              <h3 className="font-semibold text-hotwheels-yellow mb-2">
-                Can I request a specific model?
-              </h3>
-              <p className="text-gray-300">
-                Absolutely! If we don't have it in stock, we can help you find it 
-                through our network of collectors.
-              </p>
-            </div>
+            {FAQS.map(({ question, answer }) => (
+              <div key={question} className="bg-hotwheels-gray rounded-lg p-6">
+                <h3 className="font-semibold text-hotwheels-yellow mb-2">{question}</h3>
+                <p className="text-gray-300">{answer}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
