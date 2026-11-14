@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifySession } from '@/lib/auth-token'
+import { passwordMatches, verifySession } from '@/lib/auth-token'
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -7,6 +7,33 @@ export async function middleware(req: NextRequest) {
   // Analytics API gate (auth route stays open)
   if (pathname.startsWith('/api/analytics') && pathname !== '/api/analytics/auth') {
     if (!(await verifySession(process.env.ANALYTICS_PASSWORD ?? '', req.cookies.get('analytics_token')?.value))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    return NextResponse.next()
+  }
+
+  // Admin API gate (auth route stays open) - JSON 401, not a redirect.
+  if (
+    (pathname === '/api/admin' || pathname.startsWith('/api/admin/')) &&
+    pathname !== '/api/admin/auth'
+  ) {
+    if (!(await verifySession(process.env.ADMIN_PASSWORD ?? '', req.cookies.get('admin_token')?.value))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    return NextResponse.next()
+  }
+
+  // Cache revalidation: browser admin saves carry the session cookie, server
+  // callers use the shared secret header. Anonymous calls get 401.
+  if (pathname === '/api/revalidate') {
+    const secret = process.env.REVALIDATE_SECRET
+    const headerSecret = req.headers.get('x-revalidate-secret')
+    const isAdmin = await verifySession(
+      process.env.ADMIN_PASSWORD ?? '',
+      req.cookies.get('admin_token')?.value
+    )
+    const isServer = !!secret && !!headerSecret && (await passwordMatches(headerSecret, secret))
+    if (!isAdmin && !isServer) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     return NextResponse.next()
@@ -36,5 +63,11 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/analytics/:path*', '/api/analytics/:path*'],
+  matcher: [
+    '/admin/:path*',
+    '/analytics/:path*',
+    '/api/analytics/:path*',
+    '/api/admin/:path*',
+    '/api/revalidate',
+  ],
 }

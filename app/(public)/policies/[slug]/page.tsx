@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { POLICIES, type PolicyBlock } from '@/lib/policies'
-import { BUSINESS, SITE_NAME, absoluteUrl } from '@/lib/seo/site'
+import { BUSINESS, SITE_LOCALE, SITE_NAME, absoluteUrl, defaultOgImage } from '@/lib/seo/site'
 import { cn } from '@/lib/utils'
 
 // Static content - pre-render every policy at build time and revalidate daily.
@@ -31,7 +31,14 @@ export async function generateMetadata({ params }: PolicyPageProps): Promise<Met
       siteName: SITE_NAME,
       title: policy.title,
       description: policy.description,
-      images: [{ url: absoluteUrl(BUSINESS.logoPath) }],
+      locale: SITE_LOCALE,
+      images: [defaultOgImage()],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: policy.title,
+      description: policy.description,
+      images: [defaultOgImage().url],
     },
   }
 }

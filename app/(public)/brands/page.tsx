@@ -3,23 +3,34 @@ import type { Metadata } from 'next'
 import { getBrands, getPublishedProducts } from '@/lib/queries'
 import JsonLd from '@/components/seo/json-ld'
 import { breadcrumbSchema } from '@/lib/seo/schema'
-import { SITE_NAME, SITE_URL, truncate } from '@/lib/seo/site'
+import { SITE_LOCALE, SITE_NAME, SITE_URL, defaultOgImage, truncate } from '@/lib/seo/site'
 
 export const revalidate = 3600
 
+const BRANDS_TITLE = 'Diecast Car Brands — Hot Wheels, Majorette, Tomica & More'
+const BRANDS_DESCRIPTION = truncate(
+  `Browse every diecast brand we stock at ${SITE_NAME}: Hot Wheels, Hot Wheels Premium, Hot Wheels Silver Series, Majorette, Matchbox, Bburago, Tomica, Tarmac Works and Pop Race. Genuine collector cars shipping across India.`,
+  158
+)
+
 export const metadata: Metadata = {
-  title: 'Diecast Car Brands — Hot Wheels, Majorette, Tomica & More',
-  description: truncate(
-    `Browse every diecast brand we stock at ${SITE_NAME}: Hot Wheels, Hot Wheels Premium, Hot Wheels Silver Series, Majorette, Matchbox, Bburago, Tomica, Tarmac Works and Pop Race. Genuine collector cars shipping across India.`,
-    158
-  ),
+  title: { absolute: BRANDS_TITLE },
+  description: BRANDS_DESCRIPTION,
   alternates: { canonical: '/brands' },
   openGraph: {
     type: 'website',
     url: `${SITE_URL}/brands`,
     siteName: SITE_NAME,
-    title: 'Diecast Car Brands — Hot Wheels, Majorette, Tomica & More',
-    description: `Every diecast brand stocked at ${SITE_NAME}, shipping across India.`,
+    title: BRANDS_TITLE,
+    description: BRANDS_DESCRIPTION,
+    locale: SITE_LOCALE,
+    images: [defaultOgImage()],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: BRANDS_TITLE,
+    description: BRANDS_DESCRIPTION,
+    images: [defaultOgImage().url],
   },
 }
 

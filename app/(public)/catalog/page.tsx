@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { getCategories, getBrands, getCatalogProducts } from '@/lib/queries'
 import ProductGrid from '@/components/public/product-grid'
 import CatalogFilters from '@/components/public/catalog-filters'
 import CatalogEventTracker from '@/components/analytics/catalog-event-tracker'
 import JsonLd from '@/components/seo/json-ld'
 import { breadcrumbSchema, itemListSchema } from '@/lib/seo/schema'
-import { SITE_NAME, SITE_URL, absoluteUrl, truncate } from '@/lib/seo/site'
+import { SITE_LOCALE, SITE_NAME, SITE_URL, absoluteUrl, defaultOgImage, truncate } from '@/lib/seo/site'
 
 interface CatalogPageProps {
   searchParams: Promise<{
@@ -14,6 +15,7 @@ interface CatalogPageProps {
     search?: string
     view?: string
     orderType?: string
+    page?: string
   }>
 }
 
@@ -29,14 +31,59 @@ type CatalogParams = Awaited<CatalogPageProps['searchParams']>
  * - internal search results are `noindex` (they are infinite duplicates).
  * - the plain catalogue is indexable and self-canonical.
  */
-function canonicalFor(params: CatalogParams): { canonical: string; noindex: boolean } {
+function parsePage(raw: string | undefined): number {
+  const value = Number(raw)
+  return Number.isInteger(value) && value > 1 ? value : 1
+}
+
+/** Preserve every active filter while moving to another page. */
+function catalogHref(params: CatalogParams, page: number): string {
+  const searchParams = new URLSearchParams()
+  for (const key of ['search', 'category', 'brand', 'view', 'orderType'] as const) {
+    const value = params[key]
+    if (value) searchParams.set(key, value)
+  }
+  if (page > 1) searchParams.set('page', String(page))
+  const query = searchParams.toString()
+  return query ? `/catalog?${query}` : '/catalog'
+}
+
+function canonicalFor(
+  params: CatalogParams,
+  page: number,
+  validBrands: Set<string>,
+  validCategories: Set<string>
+): { canonical: string; noindex: boolean } {
   const { search, brand, category, view } = params
 
   if (search) return { canonical: '/catalog', noindex: true }
-  if (view === 'brands') return { canonical: '/brands', noindex: false }
-  if (brand) return { canonical: `/brands/${brand}`, noindex: false }
-  if (category) return { canonical: `/categories/${category}`, noindex: false }
-  return { canonical: '/catalog', noindex: false }
+  // This view renders the product grid, not the brand index; pointing a
+  // canonical at /brands would describe different content.
+  if (view === 'brands') return { canonical: '/catalog', noindex: true }
+  if (brand) {
+    return validBrands.has(brand)
+      ? { canonical: `/brands/${brand}`, noindex: false }
+      : { canonical: '/catalog', noindex: true }
+  }
+  if (category) {
+    return validCategories.has(category)
+      ? { canonical: `/categories/${category}`, noindex: false }
+      : { canonical: '/catalog', noindex: true }
+  }
+  return { canonical: page > 1 ? `/catalog?page=${page}` : '/catalog', noindex: false }
+}
+
+/** Compact pagination trail: first, last, and neighbours of the current page. */
+function pageWindow(current: number, total: number): Array<number | 'gap'> {
+  const pages: Array<number | 'gap'> = []
+  for (let page = 1; page <= total; page += 1) {
+    if (page === 1 || page === total || Math.abs(page - current) <= 1) {
+      pages.push(page)
+    } else if (pages[pages.length - 1] !== 'gap') {
+      pages.push('gap')
+    }
+  }
+  return pages
 }
 
 /** Turns `hotwheels-premium` into `Hotwheels Premium` for headings and titles. */
@@ -60,7 +107,14 @@ function catalogHeading(params: CatalogParams): string {
 
 export async function generateMetadata({ searchParams }: CatalogPageProps): Promise<Metadata> {
   const params = await searchParams
-  const { canonical, noindex } = canonicalFor(params)
+  const [brands, categories] = await Promise.all([getBrands(), getCategories()])
+  const page = parsePage(params.page)
+  const { canonical, noindex } = canonicalFor(
+    params,
+    page,
+    new Set(brands.map((brand) => brand.slug)),
+    new Set(categories.map((category) => category.slug))
+  )
   const heading = catalogHeading(params)
 
   const description = truncate(
@@ -81,6 +135,14 @@ export async function generateMetadata({ searchParams }: CatalogPageProps): Prom
       siteName: SITE_NAME,
       title: `${heading} | ${SITE_NAME}`,
       description,
+      locale: SITE_LOCALE,
+      images: [defaultOgImage()],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${heading} | ${SITE_NAME}`,
+      description,
+      images: [defaultOgImage().url],
     },
   }
 }
@@ -88,11 +150,12 @@ export async function generateMetadata({ searchParams }: CatalogPageProps): Prom
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const params = await searchParams
   const { category, brand, search, view, orderType } = params
+  const page = parsePage(params.page)
 
   const [categories, brands, initial] = await Promise.all([
     getCategories(),
     getBrands(),
-    getCatalogProducts({ search, categorySlug: category, brandSlug: brand, orderType, page: 1 }),
+    getCatalogProducts({ search, categorySlug: category, brandSlug: brand, orderType, page }),
   ])
 
   const showBrandView = view === 'brands'
@@ -100,8 +163,9 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const activeFilterCount =
     (orderType ? 1 : 0) + (category ? 1 : 0) + (brand ? 1 : 0)
 
-  // Remount the grid when filters change so it resets to a fresh page 1.
-  const gridKey = [search, category, brand, orderType, view].filter(Boolean).join('|') || 'all'
+  // Remount the grid when filters or page change so it starts from fresh data.
+  const gridKey =
+    [search, category, brand, orderType, view, page].filter(Boolean).join('|') || 'all'
 
   return (
     <div className="min-h-screen bg-hotwheels-black">
@@ -139,7 +203,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         <ProductGrid
           key={gridKey}
           initialProducts={initial.products}
-          initialPage={1}
+          initialPage={page}
           total={initial.total}
           totalPages={initial.totalPages}
           search={search}
@@ -147,6 +211,50 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
           brandSlug={brand}
           orderType={orderType}
         />
+
+        {initial.totalPages > 1 && (
+          <nav
+            aria-label="Pagination"
+            className="mt-10 flex flex-wrap items-center justify-center gap-2"
+          >
+            {page > 1 && (
+              <Link
+                href={catalogHref(params, page - 1)}
+                className="rounded-md border border-white/10 px-3 py-2 text-sm text-gray-300 hover:border-white/30 hover:text-white transition-colors"
+              >
+                Previous
+              </Link>
+            )}
+            {pageWindow(page, initial.totalPages).map((entry, index) =>
+              entry === 'gap' ? (
+                <span key={`gap-${index}`} className="px-2 text-sm text-gray-500">
+                  …
+                </span>
+              ) : (
+                <Link
+                  key={entry}
+                  href={catalogHref(params, entry)}
+                  aria-current={entry === page ? 'page' : undefined}
+                  className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                    entry === page
+                      ? 'border-hotwheels-red bg-hotwheels-red text-white'
+                      : 'border-white/10 text-gray-300 hover:border-white/30 hover:text-white'
+                  }`}
+                >
+                  {entry}
+                </Link>
+              )
+            )}
+            {page < initial.totalPages && (
+              <Link
+                href={catalogHref(params, page + 1)}
+                className="rounded-md border border-white/10 px-3 py-2 text-sm text-gray-300 hover:border-white/30 hover:text-white transition-colors"
+              >
+                Next
+              </Link>
+            )}
+          </nav>
+        )}
       </div>
     </div>
   )

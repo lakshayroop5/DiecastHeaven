@@ -2,7 +2,7 @@ import JsonLd from '@/components/seo/json-ld'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
 import { getSiteSettings } from '@/lib/queries'
 import type { JsonLdNode } from '@/lib/seo/schema'
-import { SITE_NAME, SITE_URL, truncate } from '@/lib/seo/site'
+import { SITE_LOCALE, SITE_NAME, SITE_URL, defaultOgImage, truncate } from '@/lib/seo/site'
 import type { Metadata } from 'next'
 
 const ABOUT_TITLE = `About ${SITE_NAME} — Genuine Diecast Collector Cars`
@@ -52,6 +52,14 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: SITE_NAME,
       title: ABOUT_TITLE,
       description: ABOUT_DESCRIPTION,
+      locale: SITE_LOCALE,
+      images: [defaultOgImage()],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: ABOUT_TITLE,
+      description: ABOUT_DESCRIPTION,
+      images: [defaultOgImage().url],
     },
   }
 }

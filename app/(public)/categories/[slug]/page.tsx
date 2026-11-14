@@ -5,7 +5,7 @@ import { getCategories, getPublishedProducts } from '@/lib/queries'
 import JsonLd from '@/components/seo/json-ld'
 import ProductCollection from '@/components/public/product-collection'
 import { breadcrumbSchema, itemListSchema } from '@/lib/seo/schema'
-import { SITE_NAME, SITE_URL, absoluteUrl, truncate } from '@/lib/seo/site'
+import { SITE_LOCALE, SITE_NAME, SITE_URL, absoluteUrl, defaultOgImage, truncate } from '@/lib/seo/site'
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>
@@ -57,6 +57,14 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
       siteName: SITE_NAME,
       title: `${title} | ${SITE_NAME}`,
       description,
+      locale: SITE_LOCALE,
+      images: [defaultOgImage()],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | ${SITE_NAME}`,
+      description,
+      images: [defaultOgImage().url],
     },
   }
 }

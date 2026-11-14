@@ -9,22 +9,24 @@ import { sellingPrice } from './schema'
  * Scope decisions, all deliberate:
  * - Products without a price OR without an image are skipped. Merchant Center
  *   rejects them anyway, and a feed full of rejected items hides the real errors.
- * - `identifier_exists=no` because this catalogue has no GTIN/MPN/brand-issued
- *   identifiers. Claiming otherwise would be a misrepresentation.
+ * - PRE_ORDER items are skipped: this catalogue has no `availabilityDate` field,
+ *   and Merchant Center requires `g:availability_date` for preorders. Upgrade
+ *   path: add `availabilityDate` to the Product model, then emit
+ *   `g:availability_date` and let these items back in.
+ * - `identifier_exists=no` because this catalogue has no GTIN/MPN identifiers.
+ *   Inventing an MPN from the slug would be a misrepresentation.
+ * - `g:brand` is emitted only when the catalogue names a brand; that value is
+ *   factual product data, not a merchant-issued identifier.
  * - `g:shipping` and `g:return_policy` are intentionally absent: the business
- *   quotes shipping on WhatsApp and has no published return policy. Merchant
- *   Center needs both to serve free listings, so this feed is only half of the
- *   eligibility work - see docs/seo/roadmap.md.
+ *   quotes shipping on WhatsApp and has no published return policy. Without
+ *   them items are not eligible for free listings - this feed makes no such
+ *   claim. See docs/seo/roadmap.md.
  */
 
 const GOOGLE_PRODUCT_CATEGORY =
-  process.env.GOOGLE_PRODUCT_CATEGORY || 'Toys & Games > Toys > Play Vehicles > Toy Cars & Trucks'
-
-function availability(product: ProductWithRelations): string {
-  if (product.status === 'SOLD_OUT') return 'out_of_stock'
-  if (product.orderType === 'PRE_ORDER') return 'preorder'
-  return 'in_stock'
-}
+  // Verified Google product taxonomy leaf 3551: "Toys & Games > Toys > Play
+  // Vehicles > Toy Cars". "Toy Cars & Trucks" is not a taxonomy node.
+  process.env.GOOGLE_PRODUCT_CATEGORY || 'Toys & Games > Toys > Play Vehicles > Toy Cars'
 
 /** Merchant Center wants `<amount> <CURRENCY>`, e.g. `599.00 INR`. */
 function formatFeedPrice(amount: number): string {
@@ -35,6 +37,23 @@ function feedItem(product: ProductWithRelations): string | null {
   const price = sellingPrice(product)
   const image = product.images[0]?.imageUrl
   if (price == null || !image) return null
+
+  // No `availabilityDate` exists on Product, and Merchant Center rejects a
+  // preorder without `g:availability_date`. Skip rather than emit an
+  // incomplete availability declaration.
+  if (product.orderType === 'PRE_ORDER') return null
+
+  // `g:price` is the regular/list price; `g:sale_price` is the discounted price.
+  // When no valid list price exists, the selling price is the only honest value.
+  const listPrice = product.price != null && product.price > 0 ? product.price : null
+  const salePrice =
+    listPrice != null &&
+    product.offerPrice != null &&
+    product.offerPrice > 0 &&
+    product.offerPrice < listPrice
+      ? product.offerPrice
+      : null
+  const primaryPrice = salePrice != null && listPrice != null ? listPrice : price
 
   const link = `${SITE_URL}/product/${product.slug}`
   const title = sanitizeXmlText(product.title).slice(0, 150)
@@ -55,11 +74,11 @@ function feedItem(product: ProductWithRelations): string | null {
     ...additionalImages.map(
       (url) => `      <g:additional_image_link>${escapeXml(url)}</g:additional_image_link>`
     ),
-    `      <g:availability>${availability(product)}</g:availability>`,
-    `      <g:price>${formatFeedPrice(product.price ?? price)}</g:price>`,
-    product.offerPrice != null && product.price != null && product.offerPrice < product.price
-      ? `      <g:sale_price>${formatFeedPrice(product.offerPrice)}</g:sale_price>`
-      : false,
+    `      <g:availability>${
+      product.status === 'SOLD_OUT' ? 'out_of_stock' : 'in_stock'
+    }</g:availability>`,
+    `      <g:price>${formatFeedPrice(primaryPrice)}</g:price>`,
+    salePrice != null ? `      <g:sale_price>${formatFeedPrice(salePrice)}</g:sale_price>` : false,
     '      <g:condition>new</g:condition>',
     product.brand?.name ? `      <g:brand>${escapeXml(product.brand.name)}</g:brand>` : false,
     '      <g:identifier_exists>no</g:identifier_exists>',
@@ -72,7 +91,6 @@ function feedItem(product: ProductWithRelations): string | null {
         )}</g:product_type>`
       : false,
     product.scale ? `      <g:size>${escapeXml(product.scale)}</g:size>` : false,
-    `      <g:mpn>${escapeXml(product.slug)}</g:mpn>`,
     '    </item>',
   ]
 

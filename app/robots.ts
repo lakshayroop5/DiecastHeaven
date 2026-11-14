@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { SITE_URL } from '@/lib/seo/site'
+import { PRODUCTION_HOST, SITE_URL } from '@/lib/seo/site'
 
 /**
  * robots.txt
@@ -37,6 +37,7 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/sitemap-images.xml`],
-    host: SITE_URL,
+    // Must be a bare host: a scheme in `host` is invalid YAML for the directive.
+    host: PRODUCTION_HOST,
   }
 }

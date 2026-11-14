@@ -11,9 +11,22 @@
 
 export const PRODUCTION_HOST = 'www.diecastheavenudaipur.in'
 
+/** Hosts that can only ever be a local dev server's origin. */
+const LOOPBACK_HOSTS: Record<string, true> = {
+  localhost: true,
+  '127.0.0.1': true,
+  '0.0.0.0': true,
+  '::1': true,
+}
+
 /**
  * The canonical origin. The apex domain 308-redirects to www (and the TLS
  * certificate only covers www), so www is the canonical host.
+ *
+ * `NEXT_PUBLIC_SITE_URL` is inlined at build time, so a stray dev value (e.g.
+ * `.env.production.local` with `http://localhost:3000`) would poison every
+ * canonical, OG tag, robots host and sitemap loc. In a production build such a
+ * value is ignored and the www default wins. Development keeps localhost.
  */
 function resolveSiteUrl(): string {
   const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim()
@@ -21,12 +34,16 @@ function resolveSiteUrl(): string {
   if (raw) {
     try {
       const url = new URL(raw)
-      // Collapse the apex onto the canonical www host so canonicals never point
-      // at a URL that immediately redirects.
-      if (url.hostname === 'diecastheavenudaipur.in') {
-        url.hostname = PRODUCTION_HOST
+      // IPv6 hostnames keep their brackets in `URL.hostname` (`[::1]`).
+      const host = url.hostname.replace(/^\[|\]$/g, '').toLowerCase()
+      if (!(LOOPBACK_HOSTS[host] && process.env.NODE_ENV === 'production')) {
+        // Collapse the apex onto the canonical www host so canonicals never point
+        // at a URL that immediately redirects.
+        if (url.hostname === 'diecastheavenudaipur.in') {
+          url.hostname = PRODUCTION_HOST
+        }
+        return url.origin
       }
-      return url.origin
     } catch {
       // Malformed value - fall through to the production default.
     }
@@ -79,6 +96,15 @@ export function absoluteUrl(pathOrUrl: string): string {
   if (!pathOrUrl) return SITE_URL
   if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl
   return `${SITE_URL}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`
+}
+
+/**
+ * The social card used by every page that has no image of its own. Deliberately
+ * no width/height: a declared size that does not match the asset is worse than
+ * none, and Next then infers dimensions from the file.
+ */
+export function defaultOgImage(): { url: string; alt: string } {
+  return { url: absoluteUrl(BUSINESS.logoPath), alt: `${SITE_NAME} logo` }
 }
 
 /** Site-relative path for an absolute URL on this host; passes through otherwise. */

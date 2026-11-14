@@ -91,9 +91,10 @@ export const POLICIES: Policy[] = [
       {
         title: '1. Return Policy',
         blocks: [
-          'We do not accept returns on any orders once they have been delivered, except in cases where an incorrect product has been received.',
-          'If you receive a product different from the one you ordered, you must provide proper, uninterrupted video proof showing the issue. The video proof will be reviewed before a return or refund is approved.',
-          'Without valid video proof, we will not be able to accept the return or process a refund.',
+          'We do not accept change-of-mind returns once an order has been delivered.',
+          'If you receive a damaged or incorrect product, report it within 48 hours of delivery with an uninterrupted unboxing video and clear photos of the parcel and item.',
+          'After verification, we will arrange a replacement of the damaged or incorrect item where stock is available. If a replacement is not possible and a refund is approved instead, it is processed as described in section 5.',
+          'Claims without the requested video and photo evidence cannot be approved.',
         ],
       },
       {
@@ -121,9 +122,9 @@ export const POLICIES: Policy[] = [
       {
         title: '5. Refund Method & Processing Time',
         blocks: [
-          'If you receive an incorrect product due to an error on our part, and your claim is verified with valid video proof, we will process the eligible refund within 7 days.',
-          'The refund will be transferred directly to your bank account. You may be required to provide the necessary bank details to complete the refund.',
-          'Refund processing time may vary depending on your bank or payment service provider.',
+          'Approved refunds are processed within 7 days of approval.',
+          'Refunds are transferred directly to your bank account; you may be asked for the necessary bank details.',
+          'Your bank or payment provider may take additional time to credit the amount.',
         ],
       },
     ],
@@ -143,8 +144,9 @@ export const POLICIES: Policy[] = [
       {
         title: '1. Shipping Charges',
         blocks: [
-          "Shipping charges will be communicated to you after your order is placed. The final shipping cost may vary depending on the product's size, weight, packaging requirements, and the total parcel weight after packing.",
-          'Any applicable shipping charges will be communicated before shipment.',
+          'Shipping charges are calculated from the packed parcel weight and the delivery destination.',
+          'The exact shipping amount is confirmed with you before payment and before dispatch. No shipping charge is added after payment.',
+          'We ship across India; delivery time depends on the destination and courier service.',
         ],
       },
       {
@@ -158,15 +160,16 @@ export const POLICIES: Policy[] = [
       {
         title: '3. Damage in Transit (DIT)',
         blocks: [
-          'We take reasonable precautions to pack your products securely before dispatch. However, despite proper packaging, damage during transit may occasionally occur.',
-          'Please understand that once a parcel leaves our premises, we cannot directly control how it is handled at different transit hubs or sorting facilities.',
+          'We take reasonable precautions to pack your products securely before dispatch. However, damage during transit can still occur.',
+          'Please inspect the parcel when it arrives and report any problem promptly.',
           'In the event of Damage in Transit (DIT):',
           [
-            'We do not provide refunds, replacements, or compensation for products damaged during transit.',
-            'We are unable to guarantee the condition of the outer packaging or product after it has passed through multiple transit and handling locations.',
-            'Any damage occurring during transit is beyond our direct control, and we do not assume responsibility for such incidents.',
+            'Report the damage within 48 hours of delivery with an uninterrupted unboxing video and clear photos of the parcel and item.',
+            'After verification, we will arrange a replacement of the damaged item where stock is available.',
+            'Outer-box wear or minor packaging marks alone are not eligible.',
+            'Claims without the requested video and photo evidence cannot be processed.',
           ],
-          'Although we make every reasonable effort to minimize the risk of damage, transit damage cannot be completely ruled out.',
+          'These terms apply subject to your rights under applicable consumer protection law.',
         ],
       },
       {
@@ -188,7 +191,7 @@ export const POLICIES: Policy[] = [
         blocks: [
           'We work with local courier partners who are familiar with the handling requirements of collectible products. However, after dispatch, parcels may pass through multiple third-party sorting centres, transit hubs, and delivery facilities.',
           "The handling methods and conditions at these locations may vary. Neither Diecast Heaven Udaipur nor the dispatching courier partner can directly supervise every stage of the parcel's journey.",
-          'Therefore, damage caused by handling at intermediate transit facilities is outside our direct control. We do not offer refunds or compensation for such transit damage.',
+          'Damage caused by handling at intermediate transit facilities is handled under the damage-in-transit process in section 3.',
           'We will, however, make reasonable efforts to assist with tracking enquiries and communication with the courier company where possible.',
         ],
       },

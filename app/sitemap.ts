@@ -13,6 +13,10 @@ import { POLICIES } from '@/lib/policies'
  * 2. Brand and category landing pages are real crawlable routes now, so they are
  *    listed instead of the `/catalog?brand=` query-parameter duplicates.
  */
+// Regenerated hourly so new products and landing pages enter the sitemap
+// without waiting for the next deploy.
+export const revalidate = 3600
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, brands, categories] = await Promise.all([
     getPublishedProducts(),

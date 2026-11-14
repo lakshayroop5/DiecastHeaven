@@ -15,7 +15,10 @@ export const revalidate = 3600
 export async function GET() {
   const products = await getPublishedProducts()
 
+  // A `<url>` with no `<image:image>` is invalid for this sitemap type, so
+  // image-less products are dropped entirely rather than emitted bare.
   const urls = products
+    .filter((product) => product.images.length > 0)
     .map((product) => {
       const pageUrl = `${SITE_URL}/product/${product.slug}`
       const images = product.images

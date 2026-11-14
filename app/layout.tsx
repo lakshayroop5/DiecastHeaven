@@ -5,7 +5,7 @@ import { CartProvider } from '@/lib/cart-context'
 import PageLoader from '@/components/page-loader'
 import JsonLd from '@/components/seo/json-ld'
 import { siteGraphSchema } from '@/lib/seo/schema'
-import { BUSINESS, SITE_LOCALE, SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo/site'
+import { SITE_LOCALE, SITE_NAME, SITE_URL, defaultOgImage } from '@/lib/seo/site'
 
 const DEFAULT_TITLE = process.env.DEFAULT_BUSINESS_NAME || SITE_NAME
 const DEFAULT_DESCRIPTION =
@@ -32,20 +32,13 @@ export const metadata: Metadata = {
     locale: SITE_LOCALE,
     title: `${DEFAULT_TITLE} | Premium Diecast Collector Cars in India`,
     description: DEFAULT_DESCRIPTION,
-    images: [
-      {
-        url: absoluteUrl(BUSINESS.logoPath),
-        width: 512,
-        height: 512,
-        alt: `${SITE_NAME} logo`,
-      },
-    ],
+    images: [defaultOgImage()],
   },
   twitter: {
     card: 'summary_large_image',
     title: `${DEFAULT_TITLE} | Premium Diecast Collector Cars in India`,
     description: DEFAULT_DESCRIPTION,
-    images: [absoluteUrl(BUSINESS.logoPath)],
+    images: [defaultOgImage().url],
   },
   robots: {
     index: true,

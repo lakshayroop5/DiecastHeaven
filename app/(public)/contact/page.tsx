@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { BUSINESS, SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo/site'
+import { BUSINESS, SITE_LOCALE, SITE_NAME, SITE_URL, defaultOgImage } from '@/lib/seo/site'
 import { buildWhatsAppLink } from '@/lib/whatsapp'
 
 const CONTACT_TITLE = `Contact ${SITE_NAME} — Store, Phone & WhatsApp`
@@ -18,20 +18,14 @@ export function generateMetadata(): Metadata {
       siteName: SITE_NAME,
       title: CONTACT_TITLE,
       description: CONTACT_DESCRIPTION,
-      images: [
-        {
-          url: absoluteUrl(BUSINESS.logoPath),
-          width: 512,
-          height: 512,
-          alt: `${SITE_NAME} logo`,
-        },
-      ],
+      locale: SITE_LOCALE,
+      images: [defaultOgImage()],
     },
     twitter: {
       card: 'summary_large_image',
       title: CONTACT_TITLE,
       description: CONTACT_DESCRIPTION,
-      images: [absoluteUrl(BUSINESS.logoPath)],
+      images: [defaultOgImage().url],
     },
   }
 }
@@ -43,12 +37,12 @@ const POLICY_LINKS = [
   {
     title: 'Shipping',
     href: '/policies/shipping',
-    body: 'Shipping across India; charges and timelines confirmed on WhatsApp.',
+    body: 'Charges are calculated by packed weight and destination, and confirmed before payment.',
   },
   {
     title: 'Returns',
     href: '/policies/refund',
-    body: 'Returns in genuine cases, as discussed on WhatsApp.',
+    body: 'Replacements for damaged or incorrect items, with an unboxing video.',
   },
   {
     title: 'Pre-orders',

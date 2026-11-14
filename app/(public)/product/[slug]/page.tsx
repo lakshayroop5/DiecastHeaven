@@ -14,7 +14,7 @@ import {
   breadcrumbSchema,
   productSchema,
 } from '@/lib/seo/schema'
-import { SITE_NAME, absoluteUrl, truncate } from '@/lib/seo/site'
+import { SITE_LOCALE, SITE_NAME, absoluteUrl, defaultOgImage, truncate } from '@/lib/seo/site'
 import type { ProductWithRelations } from '@/lib/types'
 import type { Metadata } from 'next'
 
@@ -79,6 +79,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const description = buildProductDescription(product)
   const canonical = `/product/${product.slug}`
   const image = product.images[0]?.imageUrl ? absoluteUrl(product.images[0].imageUrl) : null
+  const ogImage = image ? { url: image, alt: title } : defaultOgImage()
 
   return {
     title: { absolute: `${title} | ${SITE_NAME}` },
@@ -88,21 +89,15 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       type: 'website',
       url: absoluteUrl(canonical),
       siteName: SITE_NAME,
-      title: `${title} | ${SITE_NAME}`,
-      description,
-      ...(image ? { images: [{ url: image, alt: title }] } : {}),
+      locale: SITE_LOCALE,
+      images: [ogImage],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${title} | ${SITE_NAME}`,
       description,
-      ...(image ? { images: [image] } : {}),
+      images: [ogImage.url],
     },
-    // Note: Open Graph product tags (og:type=product, product:price:amount) are
-    // deliberately not emitted. Next 14's OpenGraphType union has no 'product'
-    // and `other` renders name= rather than property=, so they would be invalid
-    // markup. Price and availability are exposed in the Product JSON-LD instead,
-    // which is the signal Google actually consumes.
   }
 }
 

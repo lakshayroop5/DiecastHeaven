@@ -5,7 +5,7 @@ import Hero from '@/components/public/hero'
 import FeaturedProducts from '@/components/public/featured-products'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
 import { getBrands, getSiteSettings, getHeroMedia } from '@/lib/queries'
-import { SITE_NAME, SITE_URL, truncate } from '@/lib/seo/site'
+import { SITE_LOCALE, SITE_NAME, SITE_URL, defaultOgImage, truncate } from '@/lib/seo/site'
 
 const HOME_TITLE = 'Diecast Heaven Udaipur | Hot Wheels & Premium Diecast Cars in India'
 const HOME_DESCRIPTION = truncate(
@@ -23,11 +23,14 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: HOME_TITLE,
     description: HOME_DESCRIPTION,
+    locale: SITE_LOCALE,
+    images: [defaultOgImage()],
   },
   twitter: {
     card: 'summary_large_image',
     title: HOME_TITLE,
     description: HOME_DESCRIPTION,
+    images: [defaultOgImage().url],
   },
 }
 
