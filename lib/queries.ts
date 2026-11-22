@@ -163,6 +163,29 @@ export const getFeaturedProducts = cache(
   )
 )
 
+// 4b. New Arrivals
+// Built-in homepage section, like Featured Products: no admin setup, driven by
+// `createdAt`. Newest first, capped so the carousel stays a highlight reel and
+// the catalog stays the place to browse everything.
+const NEW_ARRIVALS_LIMIT = 12
+
+const getNewArrivalsRaw = (): Promise<ProductWithRelations[]> => {
+  return safeQuery(
+    prisma.product.findMany({
+      where: { status: { in: ['PUBLISHED', 'SOLD_OUT'] } },
+      include: DEFAULT_INCLUDE,
+      orderBy: { createdAt: 'desc' },
+      take: NEW_ARRIVALS_LIMIT,
+    }) as Promise<ProductWithRelations[]>,
+    []
+  )
+}
+export const getNewArrivals = cache(
+  safeUnstableCache(getNewArrivalsRaw, ['new-arrivals'], {
+    tags: ['products', 'new-arrivals'],
+  })
+)
+
 // 5. Published Products
 const getPublishedProductsRaw = (): Promise<ProductWithRelations[]> => {
   return safeQuery(
@@ -406,3 +429,67 @@ export const getRelatedProducts = (
   const sortedIdsStr = [...categoryIds].sort().join(',')
   return getCached(sortedIdsStr, excludeProductId, limit)
 }
+
+// 12. Homepage Scroll Lists
+// One query returns every list with its published products, so the homepage
+// renders in a single round trip and cannot show a half-built section.
+export type ScrollListWithProducts = {
+  id: string
+  title: string
+  products: ProductWithRelations[]
+}
+
+const getScrollListsRaw = (): Promise<ScrollListWithProducts[]> => {
+  return safeQuery(
+    prisma.productScrollList
+      .findMany({
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        include: {
+          products: {
+            orderBy: { sortOrder: 'asc' },
+            include: {
+              product: {
+                include: DEFAULT_INCLUDE,
+              },
+            },
+          },
+        },
+      })
+      .then((lists) =>
+        lists
+          .map((list) => ({
+            id: list.id,
+            title: list.title,
+            // Draft products never reach the storefront.
+            products: list.products
+              .map((item) => item.product)
+              .filter((product) => product.status !== 'DRAFT'),
+          }))
+          // An empty list renders nothing; dropping it here keeps the page and
+          // its JSON-LD consistent.
+          .filter((list) => list.products.length > 0)
+      ) as Promise<ScrollListWithProducts[]>,
+    []
+  )
+}
+export const getScrollLists = cache(
+  safeUnstableCache(getScrollListsRaw, ['scroll-lists'], {
+    tags: ['scroll-lists', 'products'],
+  })
+)
+
+/** Bare lists for admin UIs that only need id + title, in display order. */
+const getScrollListOptionsRaw = (): Promise<Array<{ id: string; title: string }>> => {
+  return safeQuery(
+    prisma.productScrollList.findMany({
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      select: { id: true, title: true },
+    }),
+    []
+  )
+}
+export const getScrollListOptions = cache(
+  safeUnstableCache(getScrollListOptionsRaw, ['scroll-list-options'], {
+    tags: ['scroll-lists'],
+  })
+)

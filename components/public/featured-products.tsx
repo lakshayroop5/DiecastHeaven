@@ -1,16 +1,10 @@
 import { getFeaturedProducts } from '@/lib/queries'
-import FeaturedScroll from './featured-scroll'
+import ProductCarouselSection from './product-carousel-section'
 
 export default async function FeaturedProducts() {
   const products = await getFeaturedProducts()
 
-  if (products.length === 0) {
-    return (
-      <p className="text-center text-gray-400 py-8">
-        No featured products available yet.
-      </p>
-    )
-  }
+  if (products.length === 0) return null
 
-  return <FeaturedScroll products={products} />
+  return <ProductCarouselSection title="Featured Models" products={products} />
 }

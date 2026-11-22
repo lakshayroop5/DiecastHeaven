@@ -3,8 +3,10 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import Hero from '@/components/public/hero'
 import FeaturedProducts from '@/components/public/featured-products'
+import NewArrivals from '@/components/public/new-arrivals'
+import ProductCarouselSection from '@/components/public/product-carousel-section'
 import WhatsAppCTA from '@/components/public/whatsapp-cta'
-import { getBrands, getSiteSettings, getHeroMedia } from '@/lib/queries'
+import { getBrands, getScrollLists, getSiteSettings, getHeroMedia } from '@/lib/queries'
 import { SITE_LOCALE, SITE_NAME, SITE_URL, defaultOgImage, truncate } from '@/lib/seo/site'
 
 const HOME_TITLE = 'Diecast Heaven Udaipur | Hot Wheels & Premium Diecast Cars in India'
@@ -56,10 +58,12 @@ function FeaturedSkeleton() {
 }
 
 export default async function HomePage() {
-  const [brands, settings, heroMedia] = await Promise.all([
+  const [brands, settings, heroMedia, scrollLists] = await Promise.all([
     getBrands(),
     getSiteSettings(),
     getHeroMedia(),
+    // Admin-defined carousels. Already filtered to non-empty and non-draft.
+    getScrollLists(),
   ])
 
   return (
@@ -75,26 +79,19 @@ export default async function HomePage() {
         media={heroMedia}
       />
 
-      {/* Featured Products */}
-      <section className="py-16 bg-hotwheels-black">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-hotwheels-white">
-              Featured Models
-            </h2>
-            <Link
-              href="/catalog"
-              className="text-sm font-medium text-hotwheels-red hover:text-hotwheels-yellow transition-colors"
-            >
-              View All &rarr;
-            </Link>
-          </div>
+      {/* Built-in carousels. Both are on by default and need no admin setup. */}
+      <Suspense fallback={<FeaturedSkeleton />}>
+        <FeaturedProducts />
+      </Suspense>
 
-          <Suspense fallback={<FeaturedSkeleton />}>
-            <FeaturedProducts />
-          </Suspense>
-        </div>
-      </section>
+      <Suspense fallback={<FeaturedSkeleton />}>
+        <NewArrivals />
+      </Suspense>
+
+      {/* Admin-managed carousels — one section each, in Settings order */}
+      {scrollLists.map((list) => (
+        <ProductCarouselSection key={list.id} title={list.title} products={list.products} />
+      ))}
 
       {/* Shop by Brand */}
       <section className="py-16 bg-hotwheels-black">
