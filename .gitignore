@@ -38,6 +38,9 @@ Thumbs.db
 .claude/
 .omo/
 .playwright-mcp/
+.tmp-audit/
+graphify-out/
+unslop/
 CLAUDE.md
 skills-lock.json
 tsconfig.tsbuildinfo
