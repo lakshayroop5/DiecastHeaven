@@ -43,6 +43,7 @@ interface Brand { id: string; name: string }
 interface Category { id: string; name: string }
 interface ProductImage { imageUrl: string; altText: string | null; id?: string }
 interface FormImage { imageUrl: string; altText: string; id?: string }
+interface ScrollListOption { id: string; title: string }
 
 interface Props {
   product?: {
@@ -51,6 +52,7 @@ interface Props {
     offerPrice: number | null; status: string; featured: boolean
     stock: number; sortOrder: number; orderType: string; depositAmount: number | null
     brandId: string | null; categories: Array<{ categoryId: string }>
+    scrollLists: Array<{ listId: string }>
     images: ProductImage[]
   }
 }
@@ -76,10 +78,12 @@ export default function ProductForm({ product }: Props) {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
   )
+  const [scrollLists, setScrollLists] = useState<ScrollListOption[]>([])
   const [form, setForm] = useState<{
     title: string; slug: string; description: string; shortDesc: string; scale: string;
     price: string; offerPrice: string; status: string; featured: boolean; stock: string;
-    orderType: string; depositAmount: string; brandId: string; categoryIds: string[]; images: FormImage[];
+    orderType: string; depositAmount: string; brandId: string; categoryIds: string[];
+    scrollListIds: string[]; images: FormImage[];
   }>({
     title: product?.title || '',
     slug: product?.slug || '',
@@ -95,12 +99,20 @@ export default function ProductForm({ product }: Props) {
     depositAmount: product?.depositAmount?.toString() || '',
     brandId: product?.brandId || '',
     categoryIds: product?.categories.map((c) => c.categoryId) || [],
+    scrollListIds: product?.scrollLists.map((s) => s.listId) || [],
     images: (product?.images || []).map((img) => ({ imageUrl: img.imageUrl, altText: img.altText || '', id: img.id })),
   })
 
   useEffect(() => {
     fetch('/api/admin/brands').then((r) => r.json()).then(setBrands)
     fetch('/api/admin/categories').then((r) => r.json()).then(setCategories)
+    // Lists are read live, so one created in Settings shows up on the next
+    // form open without a rebuild.
+    fetch('/api/admin/scroll-lists')
+      .then((r) => r.json())
+      .then((data: Array<{ id: string; title: string }>) =>
+        setScrollLists(data.map(({ id, title }) => ({ id, title })))
+      )
   }, [])
 
   const set = (field: string, value: any) => setForm((f) => ({ ...f, [field]: value }))
@@ -111,6 +123,15 @@ export default function ProductForm({ product }: Props) {
       categoryIds: f.categoryIds.includes(id)
         ? f.categoryIds.filter((c) => c !== id)
         : [...f.categoryIds, id],
+    }))
+  }
+
+  const toggleScrollList = (id: string) => {
+    setForm((f) => ({
+      ...f,
+      scrollListIds: f.scrollListIds.includes(id)
+        ? f.scrollListIds.filter((listId) => listId !== id)
+        : [...f.scrollListIds, id],
     }))
   }
 
@@ -195,6 +216,9 @@ export default function ProductForm({ product }: Props) {
         featured: form.featured,
         stock: parseInt(form.stock) || 0,
         brandId: form.brandId || null,
+        // Always sent: the join rows are tiny, and a removal must reach the
+        // server even when nothing else on the form changed.
+        scrollListIds: form.scrollListIds,
         ...(categoriesChanged ? { categoryIds: form.categoryIds } : {}),
         ...(imagesChanged
           ? {
@@ -221,8 +245,8 @@ export default function ProductForm({ product }: Props) {
 
       setOverlayState('success')
       router.push('/admin/products')
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Something went wrong')
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong')
       setOverlayState('error')
     }
   }
@@ -325,6 +349,37 @@ export default function ProductForm({ product }: Props) {
             </button>
           ))}
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Homepage Scroll Lists</label>
+        {scrollLists.length === 0 ? (
+          <p className="text-xs text-gray-500">
+            No scroll lists yet. Create one in Settings &rarr; Homepage Product Scroll Lists.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {scrollLists.map((list) => {
+              const checked = form.scrollListIds.includes(list.id)
+              return (
+                <label key={list.id}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border cursor-pointer transition-colors ${
+                    checked
+                      ? 'bg-hotwheels-red border-hotwheels-red text-white'
+                      : 'border-hotwheels-gray text-gray-400 hover:border-hotwheels-red'
+                  }`}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleScrollList(list.id)}
+                    className="accent-white"
+                  />
+                  {list.title}
+                </label>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <div>

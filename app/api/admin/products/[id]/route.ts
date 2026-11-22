@@ -5,7 +5,7 @@ import { revalidateTag } from '@/lib/queries'
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const product = await prisma.product.findUnique({
     where: { id: params.id },
-    include: { brand: true, categories: { include: { category: true } }, images: true },
+    include: { brand: true, categories: { include: { category: true } }, images: true, scrollLists: true },
   })
   if (!product) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(product)
@@ -13,9 +13,10 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json()
-  const { categoryIds, images, ...product } = body
+  const { categoryIds, scrollListIds, images, ...product } = body
   const imageRows = (images ?? []) as Array<{ imageUrl: string; altText: string | null; sortOrder?: number }>
 
+  const listIds = Array.isArray(scrollListIds) ? (scrollListIds as string[]) : null
   const data: any = { ...product }
 
   // ponytail: only touch relations when explicitly provided (reorder sends none)
@@ -35,11 +36,21 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       : { deleteMany: {} }
   }
 
+  // Scroll lists are keyed by list id, so a rename never breaks an assignment.
+  // `sortOrder` keeps the order the admin ticked them in, which the homepage
+  // uses to order products inside a list.
+  if (listIds) {
+    data.scrollLists = {
+      deleteMany: {},
+      create: listIds.map((listId, i) => ({ listId, sortOrder: i })),
+    }
+  }
+
   const [updated] = await Promise.all([
     prisma.product.update({
       where: { id: params.id },
       data,
-      include: { brand: true, categories: { include: { category: true } }, images: true },
+      include: { brand: true, categories: { include: { category: true } }, images: true, scrollLists: true },
     }),
     // ponytail: one INSERT for all images, not N nested writes
     imageRows.length

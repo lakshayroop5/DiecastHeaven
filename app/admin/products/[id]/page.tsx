@@ -7,14 +7,14 @@ export const metadata = { title: 'Edit Product — Admin' }
 export default async function EditProductPage({ params }: { params: { id: string } }) {
   const product = await prisma.product.findUnique({
     where: { id: params.id },
-    include: { categories: true, images: true },
+    include: { categories: true, images: true, scrollLists: true },
   })
   if (!product) notFound()
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Edit Product</h1>
-      <ProductForm product={product as any} />
+      <ProductForm product={product} />
     </div>
   )
 }

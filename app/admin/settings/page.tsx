@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import HeroMediaManager from './hero-media-manager'
+import ScrollListManager from './scroll-list-manager'
 
 interface Settings {
   id?: string; businessName: string; whatsappNumber: string
@@ -73,6 +74,7 @@ export default function AdminSettings() {
       </div>
 
       <HeroMediaManager />
+      <ScrollListManager />
     </div>
   )
 }

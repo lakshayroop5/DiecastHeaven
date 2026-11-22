@@ -16,7 +16,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const { categoryIds, images, ...product } = body
+  const { categoryIds, scrollListIds, images, ...product } = body
   const imageRows = (images ?? []) as Array<{ imageUrl: string; altText: string | null; sortOrder?: number }>
 
   // ponytail: assign unique sortOrder so drag-and-drop works reliably
@@ -30,6 +30,9 @@ export async function POST(req: NextRequest) {
       sortOrder: nextSortOrder,
       categories: categoryIds?.length
         ? { create: categoryIds.map((id: string) => ({ categoryId: id })) }
+        : undefined,
+      scrollLists: Array.isArray(scrollListIds) && scrollListIds.length
+        ? { create: (scrollListIds as string[]).map((listId, i) => ({ listId, sortOrder: i })) }
         : undefined,
     },
   })
@@ -48,7 +51,7 @@ export async function POST(req: NextRequest) {
 
   const withRelations = await prisma.product.findUnique({
     where: { id: created.id },
-    include: { brand: true, categories: { include: { category: true } }, images: true },
+    include: { brand: true, categories: { include: { category: true } }, images: true, scrollLists: true },
   })
 
   revalidateTag('products')
