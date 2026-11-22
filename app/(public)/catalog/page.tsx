@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import { getCategories, getBrands, getCatalogProducts } from '@/lib/queries'
 import ProductGrid from '@/components/public/product-grid'
 import CatalogFilters from '@/components/public/catalog-filters'
@@ -157,6 +158,11 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
     getBrands(),
     getCatalogProducts({ search, categorySlug: category, brandSlug: brand, orderType, page }),
   ])
+
+  // A page past the last one renders an empty grid, which Google reads as a
+  // soft 404. `notFound()` here answers a real 404 because this route has no
+  // `loading.tsx` to commit a 200 shell before the body renders.
+  if (page > 1 && page > initial.totalPages) notFound()
 
   const showBrandView = view === 'brands'
 

@@ -13,9 +13,16 @@ import { POLICIES } from '@/lib/policies'
  * 2. Brand and category landing pages are real crawlable routes now, so they are
  *    listed instead of the `/catalog?brand=` query-parameter duplicates.
  */
+
 // Regenerated hourly so new products and landing pages enter the sitemap
 // without waiting for the next deploy.
 export const revalidate = 3600
+
+// Static pages have no data-derived timestamp. A fixed value is honest; an
+// always-"now" lastmod (the previous `new Date()` in a route that regenerates
+// hourly) teaches crawlers to ignore lastmod for the whole sitemap.
+// Bump this when the copy on /about, /contact or /policies changes.
+const STATIC_CONTENT_UPDATED = new Date('2026-11-15')
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, brands, categories] = await Promise.all([
@@ -31,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return latest
   }, null)
 
-  const collectionLastModified = newestProductUpdate ?? new Date()
+  const collectionLastModified = newestProductUpdate ?? STATIC_CONTENT_UPDATED
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -54,13 +61,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${SITE_URL}/about`,
-      lastModified: new Date('2026-01-01'),
+      lastModified: STATIC_CONTENT_UPDATED,
       changeFrequency: 'yearly',
       priority: 0.4,
     },
     {
       url: `${SITE_URL}/contact`,
-      lastModified: new Date(),
+      lastModified: STATIC_CONTENT_UPDATED,
       changeFrequency: 'yearly',
       priority: 0.5,
     },
@@ -101,11 +108,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  // Policy pages are static content; `revalidate = 86400` on the route governs
-  // how often they are re-read, so build time is an honest lastModified value.
+  // Policy pages are static content with no per-page timestamp, so they share
+  // the same fixed date as the other static routes.
   const policyRoutes: MetadataRoute.Sitemap = POLICIES.map(({ slug }) => ({
     url: `${SITE_URL}/policies/${slug}`,
-    lastModified: new Date(),
+    lastModified: STATIC_CONTENT_UPDATED,
     changeFrequency: 'yearly',
     priority: 0.3,
   }))
