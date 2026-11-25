@@ -2,6 +2,17 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
+    // Product photos are served from pre-generated Blob variants (see
+    // lib/image-loader.js). Anything else falls back to the optimizer; one
+    // format and four widths keep its transformation count predictable.
+    loader: 'custom',
+    loaderFile: './lib/image-loader.js',
+    formats: ['image/webp'],
+    deviceSizes: [640, 828, 1080, 1920],
+    imageSizes: [128, 256, 384],
+    // Blob filenames are unique and immutable, so let both the optimizer and
+    // the Blob CDN keep their output for a year.
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       {
         protocol: 'https',

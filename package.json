@@ -15,7 +15,8 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "db:push": "prisma db push && prisma generate",
     "db:create-analytics": "tsx prisma/create-analytics-events-table.ts",
-    "seed:analytics": "tsx prisma/seed-analytics.ts"
+    "seed:analytics": "tsx prisma/seed-analytics.ts",
+    "images:backfill": "node --env-file=.env.production.local --import tsx scripts/backfill-image-variants.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -35,6 +36,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.15.4",
+    "sharp": "^0.35.5",
     "yet-another-react-lightbox": "^3.32.0"
   },
   "devDependencies": {
